@@ -8,32 +8,35 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.taoyuantravel.ui.detail.DetailScreen
 import com.example.taoyuantravel.ui.home.HomeScreen
+import com.example.taoyuantravel.ui.webview.WebViewScreen
 
-/**
- * App 的主要導航圖譜
- *
- * @param navController 導航控制器
- */
 @Composable
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route // 設定起始畫面為首頁
+        startDestination = Screen.Home.route
     ) {
-        // 首頁路由
         composable(route = Screen.Home.route) {
             HomeScreen(navController = navController)
         }
 
-        // 詳情頁路由
         composable(
             route = Screen.Detail.route,
-            // 定義此路由需要接收一個名為 "attractionJson" 的字串參數
             arguments = listOf(navArgument("attractionJson") { type = NavType.StringType })
         ) {
-            // DetailScreen 會自動從 backStackEntry.arguments 中取得參數
-            // HiltViewModel 會透過 SavedStateHandle 自動接收
+            // DetailViewModel 會自動從 SavedStateHandle 取得 attractionJson 參數
             DetailScreen(navController = navController)
+        }
+
+        composable(
+            route = Screen.WebView.route,
+            arguments = listOf(navArgument("url") { type = NavType.StringType })
+        ) { backStackEntry ->
+            // 從路由中取出編碼後的 URL
+            val encodedUrl = backStackEntry.arguments?.getString("url") ?: ""
+            // 將參數傳遞給 WebViewScreen
+            WebViewScreen(navController = navController, encodedUrl = encodedUrl)
         }
     }
 }
+

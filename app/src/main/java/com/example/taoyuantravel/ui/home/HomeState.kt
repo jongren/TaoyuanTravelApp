@@ -2,20 +2,24 @@ package com.example.taoyuantravel.ui.home
 
 import com.example.taoyuantravel.data.model.Attraction
 import com.example.taoyuantravel.data.model.News
+import com.example.taoyuantravel.ui.model.Language
 
 /**
- * 代表首頁 UI 的狀態 (State)
- * 這是一個 data class，用來存放所有需要在畫面上顯示的資料以及 UI 的狀態
+ * 定義首頁所有的 UI 狀態。
  *
- * @property isLoading 是否正在載入資料
- * @property news 最新消息列表
- * @property attractions 熱門景點列表
- * @property error 錯誤訊息，如果沒有錯誤則為 null
+ * @param isLoading 是否正在載入資料。
+ * @param news 最新消息的列表。
+ * @param attractions 熱門景點的列表。
+ * @param selectedLanguage 目前選擇的語言。
+ * @param languages 所有可選的語言列表。
+ * @param error 錯誤訊息，如果有的話。
  */
 data class HomeState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val news: List<News> = emptyList(),
     val attractions: List<Attraction> = emptyList(),
-    val error: String? = null,
-    val selectedLanguage: String = "zh-tw" // 預設語言為繁體中文
+    val selectedLanguage: Language = Language.ZH_TW,
+    val languages: List<Language> = Language.values().toList(),
+    val error: String? = null
 )
+

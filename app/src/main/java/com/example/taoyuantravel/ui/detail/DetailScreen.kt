@@ -1,6 +1,7 @@
 package com.example.taoyuantravel.ui.detail
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -24,7 +25,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.taoyuantravel.R
 import com.example.taoyuantravel.data.model.Image
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -60,8 +60,9 @@ fun DetailScreen(
             ) {
                 // 圖片輪播區塊
                 item {
-                    if (attraction.images.isNotEmpty()) {
-                        val pagerState = rememberPagerState(pageCount = { attraction.images.size })
+                    val images = attraction.images?.items ?: emptyList()
+                    if (images.isNotEmpty()) {
+                        val pagerState = rememberPagerState(pageCount = { images.size })
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -71,7 +72,10 @@ fun DetailScreen(
                                 state = pagerState,
                                 modifier = Modifier.fillMaxSize()
                             ) { page ->
-                                ImageItem(image = attraction.images[page])
+                                // 安全地取得圖片
+                                images.getOrNull(page)?.let { image ->
+                                    ImageItem(image = image)
+                                }
                             }
                             // 輪播指示器
                             Row(
@@ -87,6 +91,7 @@ fun DetailScreen(
                                         modifier = Modifier
                                             .padding(4.dp)
                                             .clip(CircleShape)
+                                            .background(color) // 修正：使用 color 變數
                                             .size(8.dp)
                                     )
                                 }
@@ -105,8 +110,6 @@ fun DetailScreen(
                         InfoRow(label = "地址", value = attraction.address)
                         Spacer(Modifier.height(8.dp))
                         InfoRow(label = "開放時間", value = attraction.openTime)
-                        Spacer(Modifier.height(8.dp))
-                        InfoRow(label = "聯絡電話", value = attraction.tel)
                     }
                 }
             }
@@ -120,10 +123,10 @@ private fun ImageItem(image: Image) {
         model = ImageRequest.Builder(LocalContext.current)
             .data(image.src)
             .crossfade(true)
+            .placeholder(android.R.drawable.ic_menu_gallery) // 使用通用 placeholder
+            .error(android.R.drawable.ic_dialog_alert)      // 使用通用 error drawable
             .build(),
-        contentDescription = null,
-        placeholder = painterResource(R.drawable.ic_launcher_background),
-        error = painterResource(R.drawable.ic_launcher_background),
+        contentDescription = image.subject,
         contentScale = ContentScale.Crop,
         modifier = Modifier.fillMaxSize()
     )
@@ -132,13 +135,16 @@ private fun ImageItem(image: Image) {
 @Composable
 private fun InfoRow(label: String, value: String) {
     if (value.isNotBlank()) {
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
             Text(
                 "$label：",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Text(value, style = MaterialTheme.typography.bodyMedium)
+            Text(value, style = MaterialTheme.typography.bodyLarge)
         }
     }
 }

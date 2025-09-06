@@ -6,21 +6,24 @@ import com.google.gson.annotations.SerializedName
  * 景點資料模型
  */
 data class Attraction(
-    val id: Int,
-    val name: String,
-    val introduction: String,
-    val address: String,
-    val tel: String,
-    @SerializedName("open_time") // API欄位與變數名稱不同，需特別指定
-    val openTime: String,
-    val url: String,
-    val images: List<Image>
-)
+    @SerializedName("Id")
+    val id: Int = 0,
 
-/**
- * 圖片資料模型
- */
-data class Image(
-    val src: String,
-    val subject: String
+    @SerializedName("Name")
+    val name: String = "",
+
+    @SerializedName("Description")
+    val introduction: String = "", // JSON 的 Description 對應到我們 App 的 introduction
+
+    @SerializedName("Open-Time")
+    val openTime: String = "",
+
+    @SerializedName("Address")
+    val address: String = "",
+
+    @SerializedName("Images")
+    val images: ImageWrapper? = null,
+
+    @SerializedName("Links")
+    val links: LinkWrapper? = null
 )
