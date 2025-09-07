@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Taoyuan Travel+</string>
+    <string name="latest_news">Latest News</string>
+    <string name="popular_attractions">Popular Attractions</string>
+    <string name="attraction_details">Attraction Details</string>
+    <string name="address">Address</string>
+    <string name="open_time">Open Time</string>
+    <string name="official_website">Official Website</string>
+</resources>
+

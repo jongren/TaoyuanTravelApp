@@ -18,7 +18,7 @@ data class HomeState(
     val isLoading: Boolean = true,
     val news: List<News> = emptyList(),
     val attractions: List<Attraction> = emptyList(),
-    val selectedLanguage: Language = Language.ZH_TW,
+    val selectedLanguage: Language = Language.ZH_TW, // 直接儲存 Language 物件
     val languages: List<Language> = Language.values().toList(),
     val error: String? = null
 )

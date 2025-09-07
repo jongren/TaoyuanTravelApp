@@ -17,15 +17,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.taoyuantravel.R
 import com.example.taoyuantravel.data.model.Attraction
 import com.example.taoyuantravel.data.model.News
-import com.example.taoyuantravel.ui.model.Language
 import com.example.taoyuantravel.ui.navigation.Screen
 import com.google.gson.Gson
 import java.nio.charset.StandardCharsets
@@ -34,7 +34,7 @@ import java.nio.charset.StandardCharsets
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel // 直接接收 ViewModel，不再使用 hiltViewModel() 建立新實例
 ) {
     val state by viewModel.state.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
@@ -42,7 +42,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("桃園景點+") },
+                title = { Text(stringResource(id = R.string.app_name)) },
                 actions = {
                     Box {
                         IconButton(onClick = { menuExpanded = true }) {
@@ -88,7 +88,7 @@ fun HomeScreen(
                 ) {
                     // 最新消息區塊 (水平滑動)
                     stickyHeader {
-                        ListHeader(title = "最新消息")
+                        ListHeader(title = stringResource(id = R.string.latest_news))
                     }
                     item {
                         LazyRow(
@@ -96,10 +96,9 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(state.news) { news ->
-                                NewsItemHorizontalWithImage( // 使用新的含圖片的卡片
+                                NewsItemHorizontalWithImage(
                                     news = news,
                                     onClick = {
-                                        // 優先使用 Links 裡的網址，如果沒有再用 TYWebsite
                                         val url = news.links?.items?.firstOrNull()?.src?.trim()
                                             ?: "https://${news.url.trim()}"
 
@@ -107,7 +106,6 @@ fun HomeScreen(
                                             val encodedUrl = Base64.encodeToString(url.toByteArray(StandardCharsets.UTF_8), Base64.URL_SAFE)
                                             navController.navigate(Screen.WebView.createRoute(encodedUrl))
                                         }
-                                        // 如果 url 不合法，則不執行任何操作
                                     }
                                 )
                             }
@@ -120,7 +118,7 @@ fun HomeScreen(
 
                     // 熱門景點區塊 (垂直列表)
                     stickyHeader {
-                        ListHeader(title = "熱門景點")
+                        ListHeader(title = stringResource(id = R.string.popular_attractions))
                     }
                     items(state.attractions) { attraction ->
                         AttractionItem(
@@ -156,12 +154,11 @@ fun ListHeader(title: String) {
 fun NewsItemHorizontalWithImage(news: News, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier.width(240.dp) // 將卡片加寬以容納圖片
+        modifier = Modifier.width(240.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // 新增的圖片區塊
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(news.images?.items?.firstOrNull()?.src)
@@ -172,8 +169,8 @@ fun NewsItemHorizontalWithImage(news: News, onClick: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
             )
-            // 下方的文字區塊
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -189,7 +186,7 @@ fun NewsItemHorizontalWithImage(news: News, onClick: () -> Unit) {
                 Text(
                     text = news.description,
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2, // 稍微減少行數以保持版面平衡
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -221,6 +218,7 @@ fun AttractionItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
             )
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(

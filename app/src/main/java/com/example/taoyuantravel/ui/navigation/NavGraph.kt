@@ -8,16 +8,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.taoyuantravel.ui.detail.DetailScreen
 import com.example.taoyuantravel.ui.home.HomeScreen
+import com.example.taoyuantravel.ui.home.HomeViewModel
 import com.example.taoyuantravel.ui.webview.WebViewScreen
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    homeViewModel: HomeViewModel // 接收從 MainActivity 傳來的共享 ViewModel
+) {
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route
     ) {
         composable(route = Screen.Home.route) {
-            HomeScreen(navController = navController)
+            // 將共享的 ViewModel 傳遞給 HomeScreen
+            HomeScreen(
+                navController = navController,
+                viewModel = homeViewModel
+            )
         }
 
         composable(

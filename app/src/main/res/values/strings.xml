@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">TaoyuanTravel</string>
+    <string name="app_name">桃園景點+</string>
+    <string name="latest_news">最新消息</string>
+    <string name="popular_attractions">熱門景點</string>
+    <string name="attraction_details">景點詳情</string>
+    <string name="address">地址</string>
+    <string name="open_time">開放時間</string>
+    <string name="official_website">前往官方網站</string>
 </resources>
+
