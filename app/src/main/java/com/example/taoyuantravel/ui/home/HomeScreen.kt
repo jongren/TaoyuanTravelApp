@@ -1,5 +1,6 @@
 package com.example.taoyuantravel.ui.home
 
+import android.content.res.Configuration
 import android.net.Uri
 import android.util.Base64
 import androidx.compose.animation.*
@@ -11,6 +12,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +53,10 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
+    
+    // 檢測螢幕方向
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     
     // 進入動畫狀態
     var isVisible by remember { mutableStateOf(false) }
@@ -187,24 +196,151 @@ fun HomeScreen(
                     )
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            alpha = contentAlpha
-                            translationY = contentTranslationY
-                        },
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
-                    // 最新消息區塊 (水平滑動)
-                    stickyHeader {
-                        ListHeader(title = stringResource(id = R.string.latest_news))
-                    }
-                    item {
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                if (isLandscape) {
+                    // 橫向佈局 - 雙欄式設計
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                alpha = contentAlpha
+                                translationY = contentTranslationY
+                            }
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // 左欄 - 最新消息 (40%)
+                        Column(
+                            modifier = Modifier.weight(0.4f)
                         ) {
+                            ListHeader(title = stringResource(id = R.string.latest_news))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                itemsIndexed(state.news) { index, news ->
+                                    val latestNewsTitle = stringResource(id = R.string.latest_news)
+                                    
+                                    var itemVisible by remember { mutableStateOf(false) }
+                                    
+                                    LaunchedEffect(isVisible) {
+                                        if (isVisible) {
+                                            delay((index * 100).toLong())
+                                            itemVisible = true
+                                        }
+                                    }
+                                    
+                                    val itemScale by animateFloatAsState(
+                                        targetValue = if (itemVisible) 1f else 0.8f,
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessLow
+                                        ),
+                                        label = "newsItemScale"
+                                    )
+                                    
+                                    val itemAlpha by animateFloatAsState(
+                                        targetValue = if (itemVisible) 1f else 0f,
+                                        animationSpec = tween(durationMillis = 600),
+                                        label = "newsItemAlpha"
+                                    )
+                                    
+                                    NewsItemLandscape(
+                                        news = news,
+                                        modifier = Modifier
+                                            .scale(itemScale)
+                                            .graphicsLayer { alpha = itemAlpha },
+                                        onClick = {
+                                            val url = news.links?.items?.firstOrNull()?.src?.trim()
+                                                ?: "https://${news.url.trim()}"
+
+                                            val processedUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                                                "https://$url"
+                                            } else {
+                                                url
+                                            }
+                                            
+                                            val encodedUrl = Base64.encodeToString(processedUrl.toByteArray(StandardCharsets.UTF_8), Base64.URL_SAFE)
+                                            navController.navigate(Screen.WebView.createRoute(encodedUrl, latestNewsTitle))
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // 右欄 - 熱門景點 (60%)
+                        Column(
+                            modifier = Modifier.weight(0.6f)
+                        ) {
+                            ListHeader(title = stringResource(id = R.string.popular_attractions))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                itemsIndexed(state.attractions) { index, attraction ->
+                                    var attractionVisible by remember { mutableStateOf(false) }
+                                    
+                                    LaunchedEffect(isVisible) {
+                                        if (isVisible) {
+                                            delay((index * 150 + 500).toLong())
+                                            attractionVisible = true
+                                        }
+                                    }
+                                    
+                                    val attractionScale by animateFloatAsState(
+                                        targetValue = if (attractionVisible) 1f else 0.9f,
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessMedium
+                                        ),
+                                        label = "attractionScale"
+                                    )
+                                    
+                                    val attractionAlpha by animateFloatAsState(
+                                        targetValue = if (attractionVisible) 1f else 0f,
+                                        animationSpec = tween(durationMillis = 800),
+                                        label = "attractionAlpha"
+                                    )
+                                    
+                                    AttractionItemLandscape(
+                                        attraction = attraction,
+                                        onClick = {
+                                            val json = Uri.encode(Gson().toJson(attraction))
+                                            navController.navigate(Screen.Detail.createRoute(json))
+                                        },
+                                        modifier = Modifier
+                                            .scale(attractionScale)
+                                            .graphicsLayer {
+                                                alpha = attractionAlpha
+                                            }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // 直向佈局 - 原有設計
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                alpha = contentAlpha
+                                translationY = contentTranslationY
+                            },
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        // 最新消息區塊 (水平滑動)
+                        stickyHeader {
+                            ListHeader(title = stringResource(id = R.string.latest_news))
+                        }
+                        item {
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
                             itemsIndexed(state.news) { index, news ->
                                 val latestNewsTitle = stringResource(id = R.string.latest_news)
                                 
@@ -314,9 +450,187 @@ fun HomeScreen(
                                     translationX = attractionTranslationX
                                 }
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+// 橫向佈局專用的新聞項目
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NewsItemLandscape(
+    news: News, 
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    
+    val cardScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "cardScale"
+    )
+    
+    Card(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .scale(cardScale)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                isPressed = !isPressed
+                onClick()
+            },
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(news.images?.items?.firstOrNull()?.src)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = news.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .width(80.dp)
+                    .height(80.dp)
+                    .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.secondaryContainer,
+                                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f)
+                            )
+                        )
+                    )
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = news.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = news.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+// 橫向佈局專用的景點項目
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AttractionItemLandscape(
+    attraction: Attraction,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    
+    val cardElevation by animateDpAsState(
+        targetValue = if (isPressed) 8.dp else 4.dp,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "cardElevation"
+    )
+    
+    Card(
+        onClick = {
+            isPressed = true
+            onClick()
+        },
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column {
+            Box {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(attraction.images?.items?.firstOrNull()?.src)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = attraction.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.secondaryContainer,
+                                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                                )
+                            )
+                        )
+                )
+                // 漸層遮罩
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(
+                                    androidx.compose.ui.graphics.Color.Transparent,
+                                    androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.2f)
+                                ),
+                                startY = 60f
+                            )
+                        )
+                )
+            }
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Text(
+                    text = attraction.name,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = attraction.introduction,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.1
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
