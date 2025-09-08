@@ -1,7 +1,10 @@
 package com.example.taoyuantravel.ui.detail
 
+import android.util.Base64
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -20,12 +23,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.taoyuantravel.R
 import com.example.taoyuantravel.data.model.Image
+import com.example.taoyuantravel.ui.navigation.Screen
+import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -103,13 +110,73 @@ fun DetailScreen(
                 // 文字資訊區塊
                 item {
                     Column(Modifier.padding(16.dp)) {
-                        Text(attraction.name, style = MaterialTheme.typography.headlineSmall)
-                        Spacer(Modifier.height(16.dp))
-                        Text(attraction.introduction, style = MaterialTheme.typography.bodyLarge)
-                        Spacer(Modifier.height(24.dp))
-                        InfoRow(label = "地址", value = attraction.address)
+                        
+                        // 調整順序：開放時間 > 地址 > 電話 > 官方網站
+                        InfoRow(label = stringResource(id = R.string.open_time), value = attraction.openTime)
                         Spacer(Modifier.height(8.dp))
-                        InfoRow(label = "開放時間", value = attraction.openTime)
+                        InfoRow(label = stringResource(id = R.string.address), value = attraction.address)
+                        
+                        // 檢查是否有電話號碼（從Links中尋找）
+                        val phoneLink = attraction.links?.items?.find { it.subject.contains("電話", ignoreCase = true) || 
+                                                                       it.subject.contains("Tel", ignoreCase = true) || 
+                                                                       it.subject.contains("Phone", ignoreCase = true) }
+                        if (phoneLink != null) {
+                            Spacer(Modifier.height(8.dp))
+                            InfoRow(label = "電話", value = phoneLink.src)
+                        }
+                        
+                        // 檢查是否有官方網站（從Links中尋找）
+                        val websiteLink = attraction.links?.items?.find { it.subject.contains("網站", ignoreCase = true) || 
+                                                                        it.subject.contains("網址", ignoreCase = true) || 
+                                                                        it.subject.contains("官網", ignoreCase = true) || 
+                                                                        it.subject.contains("Website", ignoreCase = true) || 
+                                                                        it.subject.contains("Site", ignoreCase = true) }
+                        if (websiteLink != null) {
+                            Spacer(Modifier.height(8.dp))
+                            val navController = navController
+                            val context = LocalContext.current
+                            
+                            // 官方網站可點擊
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        // 使用完整URL進行Base64編碼，並導航到WebView頁面，同時傳遞景點名稱作為標題
+                                        val fullUrl = websiteLink.src.trim()
+                                        // 確保URL包含http或https前綴
+                                        val processedUrl = if (!fullUrl.startsWith("http://") && !fullUrl.startsWith("https://")) {
+                                            "https://$fullUrl"
+                                        } else {
+                                            fullUrl
+                                        }
+
+                                        Log.d("DetailScreen", "processedUrl: $processedUrl fullRul: $fullUrl")
+                                        val encodedUrl = Base64.encodeToString(processedUrl.toByteArray(StandardCharsets.UTF_8), Base64.URL_SAFE)
+                                        navController.navigate(Screen.WebView.createRoute(encodedUrl, attraction.name))
+                                    },
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                // 只顯示域名部分
+                                val domain = try {
+                                    val url = websiteLink.src
+                                    val regex = "(?:https?://)?(?:www\\.)?([^/]+)".toRegex()
+                                    val matchResult = regex.find(url)
+                                    matchResult?.groupValues?.get(1) ?: url
+                                } catch (e: Exception) {
+                                    websiteLink.src
+                                }
+                                
+                                Text(
+                                    "${stringResource(id = R.string.official_website)}：$domain",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        
+                        // 將介紹(Description)移到最後
+                        Spacer(Modifier.height(24.dp))
+                        Text(attraction.introduction, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }

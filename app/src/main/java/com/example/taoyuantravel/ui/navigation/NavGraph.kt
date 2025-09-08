@@ -63,11 +63,23 @@ fun NavGraph(
 
         composable(
             route = Screen.WebView.route,
-            arguments = listOf(navArgument("url") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("url") { type = NavType.StringType },
+                navArgument("title") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
-            // 從路由中取出編碼後的 URL
+            // 從路由中取出編碼後的 URL 和標題
             val encodedUrl = backStackEntry.arguments?.getString("url") ?: ""
-            WebViewScreen(navController = navController, encodedUrl = encodedUrl)
+            val encodedTitle = backStackEntry.arguments?.getString("title") ?: "none"
+            
+            // 解碼標題
+            val title = if (encodedTitle != "none") {
+                java.net.URLDecoder.decode(encodedTitle, "UTF-8")
+            } else {
+                null
+            }
+            
+            WebViewScreen(navController = navController, encodedUrl = encodedUrl, title = title)
         }
     }
 }

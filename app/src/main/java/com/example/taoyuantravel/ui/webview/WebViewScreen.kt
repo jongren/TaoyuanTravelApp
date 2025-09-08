@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +21,8 @@ import androidx.navigation.NavController
 @Composable
 fun WebViewScreen(
     navController: NavController,
-    encodedUrl: String?
+    encodedUrl: String?,
+    title: String? = null // 添加標題參數，預設為null
 ) {
     // 將 Base64 編碼的 URL 解碼回原始 URL
     val url = remember(encodedUrl) {
@@ -38,7 +40,13 @@ fun WebViewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("最新消息") },
+                title = { 
+                    Text(
+                        text = title ?: "網頁內容",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    ) 
+                }, // 使用傳入的標題，如果為null則顯示「網頁內容」
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")

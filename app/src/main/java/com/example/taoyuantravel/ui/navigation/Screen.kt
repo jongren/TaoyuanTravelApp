@@ -11,9 +11,10 @@ sealed class Screen(val route: String) {
         }
     }
 
-    object WebView : Screen("webView/{url}") {
-        fun createRoute(url: String): String {
-            return "webView/$url"
+    object WebView : Screen("webView/{url}/{title}") {
+        fun createRoute(url: String, title: String? = null): String {
+            val encodedTitle = title?.let { java.net.URLEncoder.encode(it, "UTF-8") } ?: "none"
+            return "webView/$url/$encodedTitle"
         }
     }
 }

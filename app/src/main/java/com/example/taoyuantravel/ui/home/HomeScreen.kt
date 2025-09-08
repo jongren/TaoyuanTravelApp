@@ -96,16 +96,22 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(state.news) { news ->
+                                val latestNewsTitle = stringResource(id = R.string.latest_news)
                                 NewsItemHorizontalWithImage(
                                     news = news,
                                     onClick = {
                                         val url = news.links?.items?.firstOrNull()?.src?.trim()
                                             ?: "https://${news.url.trim()}"
 
-                                        if (url.startsWith("http")) {
-                                            val encodedUrl = Base64.encodeToString(url.toByteArray(StandardCharsets.UTF_8), Base64.URL_SAFE)
-                                            navController.navigate(Screen.WebView.createRoute(encodedUrl))
+                                        // 確保URL包含http或https前綴
+                                        val processedUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                                            "https://$url"
+                                        } else {
+                                            url
                                         }
+                                        
+                                        val encodedUrl = Base64.encodeToString(processedUrl.toByteArray(StandardCharsets.UTF_8), Base64.URL_SAFE)
+                                        navController.navigate(Screen.WebView.createRoute(encodedUrl, latestNewsTitle))
                                     }
                                 )
                             }
