@@ -15,6 +15,7 @@ import com.example.taoyuantravel.ui.detail.DetailScreen
 import com.example.taoyuantravel.ui.detail.DetailViewModel
 import com.example.taoyuantravel.ui.home.HomeScreen
 import com.example.taoyuantravel.ui.home.HomeViewModel
+import com.example.taoyuantravel.ui.settings.SettingsScreen
 import com.example.taoyuantravel.ui.webview.WebViewScreen
 
 @Composable
@@ -80,6 +81,10 @@ fun NavGraph(
             }
             
             WebViewScreen(navController = navController, encodedUrl = encodedUrl, title = title)
+        }
+        
+        composable(route = Screen.Settings.route) {
+            SettingsScreen(navController = navController)
         }
     }
 }

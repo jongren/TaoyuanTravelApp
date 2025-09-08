@@ -19,6 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.taoyuantravel.ui.home.HomeViewModel
 import com.example.taoyuantravel.ui.navigation.NavGraph
+import com.example.taoyuantravel.ui.theme.ThemeProvider
 import com.example.taoyuantravel.ui.theme.TaoyuanTravelTheme
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
@@ -33,7 +34,7 @@ class MainActivity : ComponentActivity() {
 
             // 使用我們自訂的 Wrapper Composable 來應用語言設定
             LocaleWrapper(locale = state.selectedLanguage.locale) {
-                TaoyuanTravelTheme {
+                ThemeProvider {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background

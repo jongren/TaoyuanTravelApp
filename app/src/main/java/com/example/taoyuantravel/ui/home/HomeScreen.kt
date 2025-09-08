@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -82,36 +83,46 @@ fun HomeScreen(
                     ) 
                 },
                 actions = {
-                    Box(
+                    Row(
                         modifier = Modifier.graphicsLayer {
                             alpha = topBarAlpha
                             translationY = topBarTranslationY
                         }
                     ) {
+                        // 設定按鈕
                         IconButton(
-                            onClick = { menuExpanded = true },
-                            modifier = Modifier.scale(
-                                animateFloatAsState(
-                                    targetValue = if (menuExpanded) 1.1f else 1f,
-                                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                                    label = "iconScale"
-                                ).value
-                            )
+                            onClick = { navController.navigate(Screen.Settings.route) }
                         ) {
-                            Icon(Icons.Default.Language, contentDescription = "切換語系")
+                            Icon(Icons.Default.Settings, contentDescription = "設定")
                         }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false }
-                        ) {
-                            state.languages.forEach { lang ->
-                                DropdownMenuItem(
-                                    text = { Text(lang.displayName) },
-                                    onClick = {
-                                        viewModel.onEvent(HomeEvent.ChangeLanguage(lang.code))
-                                        menuExpanded = false
-                                    }
+                        
+                        // 語言切換按鈕
+                        Box {
+                            IconButton(
+                                onClick = { menuExpanded = true },
+                                modifier = Modifier.scale(
+                                    animateFloatAsState(
+                                        targetValue = if (menuExpanded) 1.1f else 1f,
+                                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                        label = "iconScale"
+                                    ).value
                                 )
+                            ) {
+                                Icon(Icons.Default.Language, contentDescription = "切換語系")
+                            }
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = { menuExpanded = false }
+                            ) {
+                                state.languages.forEach { lang ->
+                                    DropdownMenuItem(
+                                        text = { Text(lang.displayName) },
+                                        onClick = {
+                                            viewModel.onEvent(HomeEvent.ChangeLanguage(lang.code))
+                                            menuExpanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

@@ -17,5 +17,7 @@ sealed class Screen(val route: String) {
             return "webView/$url/$encodedTitle"
         }
     }
+    
+    object Settings : Screen("settings")
 }
 
