@@ -56,6 +56,7 @@ fun WebViewScreen(
                 // AndroidView 是 Jetpack Compose 中用來嵌入傳統 Android View 的方法
                 AndroidView(
                     factory = { context ->
+                        // 使用 factory 提供的上下文創建 WebView
                         WebView(context).apply {
                             // 進行 WebView 的基本設定
                             layoutParams = ViewGroup.LayoutParams(

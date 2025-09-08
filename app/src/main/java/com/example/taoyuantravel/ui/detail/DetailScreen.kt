@@ -31,7 +31,7 @@ import com.example.taoyuantravel.data.model.Image
 @Composable
 fun DetailScreen(
     navController: NavController,
-    viewModel: DetailViewModel = hiltViewModel()
+    viewModel: DetailViewModel
 ) {
     val state by viewModel.state.collectAsState()
     val attraction = state.attraction
