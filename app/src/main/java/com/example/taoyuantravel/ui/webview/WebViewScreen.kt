@@ -1,7 +1,10 @@
 package com.example.taoyuantravel.ui.webview
 
 import android.util.Base64
+import android.util.Log
 import android.view.ViewGroup
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Box
@@ -28,8 +31,11 @@ fun WebViewScreen(
     val url = remember(encodedUrl) {
         if (encodedUrl != null) {
             try {
-                String(Base64.decode(encodedUrl, Base64.NO_WRAP))
+                val decodedUrl = String(Base64.decode(encodedUrl, Base64.URL_SAFE))
+                Log.d("WebViewScreen", "解碼URL: $decodedUrl")
+                decodedUrl
             } catch (e: IllegalArgumentException) {
+                Log.e("WebViewScreen", "URL解碼失敗: $encodedUrl", e)
                 null // 如果解碼失敗則返回 null
             }
         } else {
@@ -71,8 +77,50 @@ fun WebViewScreen(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
-                            webViewClient = WebViewClient() // 確保連結在 WebView 內開啟
-                            settings.javaScriptEnabled = true // 啟用 JavaScript
+                            // 自定義 WebViewClient 來處理錯誤和記錄日誌
+                            webViewClient = object : WebViewClient() {
+                                override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                                    super.onPageStarted(view, url, favicon)
+                                    Log.d("WebViewScreen", "開始載入頁面: $url")
+                                }
+                                
+                                override fun onPageFinished(view: WebView?, url: String?) {
+                                    super.onPageFinished(view, url)
+                                    Log.d("WebViewScreen", "頁面載入完成: $url")
+                                }
+                                
+                                override fun onReceivedError(
+                                    view: WebView?,
+                                    request: WebResourceRequest?,
+                                    error: WebResourceError?
+                                ) {
+                                    super.onReceivedError(view, request, error)
+                                    Log.e("WebViewScreen", "載入錯誤 - URL: ${request?.url}, 錯誤代碼: ${error?.errorCode}, 描述: ${error?.description}")
+                                }
+                                
+                                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                                    // 確保所有連結都在 WebView 內開啟
+                                    return false
+                                }
+                            }
+                            
+                            // WebView 設定
+                            settings.apply {
+                                javaScriptEnabled = true // 啟用 JavaScript
+                                domStorageEnabled = true // 啟用 DOM 儲存
+                                loadWithOverviewMode = true // 載入時縮放至適合螢幕
+                                useWideViewPort = true // 啟用寬視窗
+                                builtInZoomControls = true // 啟用縮放控制
+                                displayZoomControls = false // 隱藏縮放按鈕
+                                setSupportZoom(true) // 支援縮放
+                                
+                                // 設定 User-Agent 為標準桌面瀏覽器
+                                userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                                
+                                // 混合內容設定（允許 HTTPS 頁面載入 HTTP 資源）
+                                mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                            }
+                            
                             loadUrl(url)
                         }
                     },
