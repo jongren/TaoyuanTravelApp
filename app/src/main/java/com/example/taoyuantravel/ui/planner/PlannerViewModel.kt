@@ -1,11 +1,15 @@
 package com.example.taoyuantravel.ui.planner
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.taoyuantravel.R
 import com.example.taoyuantravel.data.repository.GeminiRepository
 import com.example.taoyuantravel.data.repository.TaoyuanTravelRepository
+import com.example.taoyuantravel.ui.home.HomeViewModel
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,68 +22,62 @@ import javax.inject.Inject
  * 
  * 使用 Hilt 注入並包含 MutableStateFlow 來管理 PlannerState
  */
-@HiltViewModel
-class PlannerViewModel @Inject constructor(
+class PlannerViewModel constructor(
     private val geminiRepository: GeminiRepository,
-    private val taoyuanTravelRepository: TaoyuanTravelRepository
+    private val taoyuanTravelRepository: TaoyuanTravelRepository,
+    private val homeViewModel: HomeViewModel,
+    private val context: Context
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(PlannerState())
-    val state: StateFlow<PlannerState> = _state.asStateFlow()
+    private val _uiState = MutableStateFlow(PlannerState())
+    val uiState: StateFlow<PlannerState> = _uiState.asStateFlow()
+
+    private val _userInput = MutableStateFlow("")
+    val userInput: StateFlow<String> = _userInput.asStateFlow()
 
     /**
-     * 處理UI事件
-     * 
-     * @param event 要處理的事件
+     * 更新用戶輸入
      */
-    fun onEvent(event: PlannerEvent) {
-        when (event) {
-            is PlannerEvent.OnUserInputChanged -> {
-                _state.update { it.copy(userInput = event.text) }
-            }
-            
-            PlannerEvent.GenerateItinerary -> {
-                generateItinerary()
-            }
-        }
+    fun updateUserInput(input: String) {
+        _userInput.update { input }
     }
-    
+
     /**
      * 生成 AI 行程
      */
-    private fun generateItinerary() {
+    fun generateItinerary() {
         viewModelScope.launch {
             try {
-                _state.update { it.copy(isLoading = true, error = null) }
+                _uiState.update { it.copy(isLoading = true, error = null) }
                 
                 val attractionsResponse = taoyuanTravelRepository.getAttractions(
-                    lang = "zh-tw",
+                    lang = homeViewModel.state.value.selectedLanguage.code,
                     page = 1
                 )
                 
                 if (!attractionsResponse.isSuccessful) {
-                    throw Exception("無法獲取景點資料：${attractionsResponse.message()}")
+                    throw Exception(context.getString(R.string.error_no_attractions_data))
                 }
                 
                 val attractionsData = attractionsResponse.body()
-                    ?: throw Exception("景點資料回應格式錯誤")
+                    ?: throw Exception(context.getString(R.string.error_invalid_response_format))
                 
                 val attractionsList = attractionsData.infos.data
                 if (attractionsList.isEmpty()) {
-                    throw Exception("沒有找到景點資料，請稍後再試")
+                    throw Exception(context.getString(R.string.error_no_attractions_found))
                 }
                 
                 val attractionsJson = Gson().toJson(attractionsList)
                 
                 val result = geminiRepository.generateItinerary(
-                    userPrompt = _state.value.userInput,
+                    userPrompt = _userInput.value,
                     attractionsJson = attractionsJson
                 )
                 
-                _state.update { 
+                _uiState.update { 
                     it.copy(
                         isLoading = false,
-                        itineraryResult = result,
+                        result = result,
                         error = null
                     )
                 }
@@ -87,10 +85,10 @@ class PlannerViewModel @Inject constructor(
             } catch (e: Exception) {
                 android.util.Log.e("PlannerViewModel", "生成行程時發生錯誤", e)
                 
-                _state.update { 
+                _uiState.update { 
                     it.copy(
                         isLoading = false,
-                        error = e.message ?: "發生未知錯誤"
+                        error = e.message ?: context.getString(R.string.error_unknown)
                     )
                 }
             }

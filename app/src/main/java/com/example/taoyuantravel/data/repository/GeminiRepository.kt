@@ -1,8 +1,11 @@
 package com.example.taoyuantravel.data.repository
 
+import android.content.Context
 import com.example.taoyuantravel.BuildConfig
+import com.example.taoyuantravel.R
 import com.example.taoyuantravel.data.model.ItineraryResponse
 import com.google.gson.Gson
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -11,6 +14,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,7 +25,8 @@ import javax.inject.Singleton
 @Singleton
 class GeminiRepository @Inject constructor(
     private val okHttpClient: OkHttpClient,
-    private val gson: Gson
+    private val gson: Gson,
+    @ApplicationContext private val context: Context
 ) {
     
     companion object {
@@ -40,43 +45,8 @@ class GeminiRepository @Inject constructor(
         attractionsJson: String
     ): ItineraryResponse = withContext(Dispatchers.IO) {
         
-        val systemInstruction = """
-            你是一位專業的桃園旅遊規劃師。你的任務是根據使用者提供的[旅遊偏好]和一份[景點列表]，規劃一份合理、有趣、且行程順暢的旅遊計畫。
-            
-            你的回覆**必須**嚴格遵循以下 JSON 格式，不得包含任何額外的解釋或 Markdown 語法：
-            {
-              "title": "為您規劃的桃園一日遊",
-              "summary": "這是一條結合自然風光與咖啡小憩的輕鬆行程，適合悠閒的午後時光。",
-              "steps": [
-                {
-                  "time": "13:00 - 15:00",
-                  "activity": "享受湖光山色",
-                  "location": "石門水庫",
-                  "description": "您可以沿著壩頂步道散步，欣賞壯麗的水庫風景。"
-                },
-                {
-                  "time": "15:30 - 17:00",
-                  "activity": "品味老街風情與手沖咖啡",
-                  "location": "大溪老街",
-                  "description": "穿梭在巴洛克風格的街屋中，找一家有特色的咖啡廳稍作休息。"
-                },
-                {
-                  "time": "17:00 - ",
-                  "activity": "欣賞夕陽與漁港景致",
-                  "location": "永安漁港",
-                  "description": "在彩虹橋上等待日落，為今天的旅程畫下完美句點。"
-                }
-              ]
-            }
-        """.trimIndent()
-        
-        val userContent = """
-            [旅遊偏好]: $userPrompt
-            
-            [景點列表]: $attractionsJson
-            
-            請根據以上資訊為我規劃一份桃園旅遊行程。
-        """.trimIndent()
+        val systemInstruction = context.getString(R.string.ai_system_instruction)
+        val userContent = context.getString(R.string.ai_user_content_template, userPrompt, attractionsJson)
         
         val requestBody = JSONObject().apply {
             put("system_instruction", JSONObject().apply {
@@ -98,8 +68,8 @@ class GeminiRepository @Inject constructor(
         }
         
         if (API_KEY.isBlank() || API_KEY == "\"\"") {
-            android.util.Log.e("GeminiRepository", "Gemini API 金鑰未配置")
-            throw Exception("Gemini API 金鑰未配置，請檢查 local.properties 文件")
+            android.util.Log.e("GeminiRepository", "Gemini API key not configured")
+            throw Exception(context.getString(R.string.error_gemini_api_key_not_configured))
         }
         
         val request = Request.Builder()
@@ -111,18 +81,18 @@ class GeminiRepository @Inject constructor(
         val response = okHttpClient.newCall(request).execute()
         
         if (!response.isSuccessful) {
-            val errorBody = response.body?.string() ?: "無錯誤詳情"
-            android.util.Log.e("GeminiRepository", "Gemini API 呼叫失敗: ${response.code} ${response.message}")
-            throw Exception("Gemini API 呼叫失敗: ${response.code} ${response.message}\n錯誤詳情: $errorBody")
+            val errorBody = response.body?.string() ?: "No error details"
+            android.util.Log.e("GeminiRepository", "Gemini API call failed: ${response.code} ${response.message}")
+            throw Exception("${context.getString(R.string.error_gemini_api_call_failed)}: ${response.code} ${response.message}\nError details: $errorBody")
         }
         
-        val responseBody = response.body?.string() ?: throw Exception("回應內容為空")
+        val responseBody = response.body?.string() ?: throw Exception("Response body is empty")
         
         val jsonResponse = JSONObject(responseBody)
         val candidates = jsonResponse.getJSONArray("candidates")
         
         if (candidates.length() == 0) {
-            throw Exception("Gemini API 沒有返回任何候選結果")
+            throw Exception(context.getString(R.string.error_gemini_no_candidates))
         }
         
         val firstCandidate = candidates.getJSONObject(0)
@@ -130,7 +100,7 @@ class GeminiRepository @Inject constructor(
         val parts = content.getJSONArray("parts")
         
         if (parts.length() == 0) {
-            throw Exception("Gemini API 回應格式錯誤")
+            throw Exception(context.getString(R.string.error_gemini_response_format))
         }
         
         val generatedText = parts.getJSONObject(0).getString("text")
@@ -139,20 +109,20 @@ class GeminiRepository @Inject constructor(
             val cleanedJson = extractJsonFromText(generatedText)
             
             if (cleanedJson.isBlank() || cleanedJson == "{}") {
-                throw Exception("AI 回應中沒有找到有效的 JSON 內容")
+                throw Exception(context.getString(R.string.error_ai_no_valid_json))
             }
             
             val result = gson.fromJson(cleanedJson, ItineraryResponse::class.java)
             
             if (result == null) {
-                android.util.Log.e("GeminiRepository", "JSON 解析結果為空")
-                throw Exception("JSON 解析結果為空")
+                android.util.Log.e("GeminiRepository", "JSON parsing result is null")
+                throw Exception(context.getString(R.string.error_json_parse_null))
             }
             
             return@withContext result
         } catch (e: Exception) {
-            android.util.Log.e("GeminiRepository", "無法解析 AI 回應: ${e.message}")
-            throw Exception("無法解析 AI 回應的 JSON 格式: ${e.message}\n清理後的 JSON: ${extractJsonFromText(generatedText)}\n原始回應: $generatedText")
+            android.util.Log.e("GeminiRepository", "Unable to parse AI response: ${e.message}")
+            throw Exception("${context.getString(R.string.error_json_parse_failed)}: ${e.message}\nCleaned JSON: ${extractJsonFromText(generatedText)}\nOriginal response: $generatedText")
         }
     }
     

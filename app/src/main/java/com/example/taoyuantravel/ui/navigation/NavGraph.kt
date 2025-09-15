@@ -67,7 +67,7 @@ fun NavGraph(
                                 .registerTypeAdapterFactory(com.example.taoyuantravel.data.model.ListOrObjectAdapterFactory())
                                 .create()
                             
-                            val geminiRepository = com.example.taoyuantravel.data.repository.GeminiRepository(okHttpClient, gson)
+                            val geminiRepository = com.example.taoyuantravel.data.repository.GeminiRepository(okHttpClient, gson, context)
                             val retrofit = retrofit2.Retrofit.Builder()
                                 .baseUrl(com.example.taoyuantravel.data.source.remote.api.ApiConstants.BASE_URL)
                                 .client(okHttpClient)
@@ -77,7 +77,7 @@ fun NavGraph(
                             val taoyuanTravelRepository = com.example.taoyuantravel.data.repository.TaoyuanTravelRepositoryImpl(apiService)
                             
                             @Suppress("UNCHECKED_CAST")
-                            return com.example.taoyuantravel.ui.planner.PlannerViewModel(geminiRepository, taoyuanTravelRepository) as T
+                            return com.example.taoyuantravel.ui.planner.PlannerViewModel(geminiRepository, taoyuanTravelRepository, homeViewModel, context) as T
                         }
                     }
                 )

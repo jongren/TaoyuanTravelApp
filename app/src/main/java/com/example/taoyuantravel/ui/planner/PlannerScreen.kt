@@ -37,12 +37,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.taoyuantravel.R
 import com.example.taoyuantravel.data.model.ItineraryResponse
 import com.example.taoyuantravel.data.model.ItineraryStep
 
@@ -53,30 +55,24 @@ fun PlannerScreen(
     modifier: Modifier = Modifier,
     viewModel: PlannerViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.state.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val userInput by viewModel.userInput.collectAsState()
     val focusManager = LocalFocusManager.current
-    val lazyListState = rememberLazyListState()
-    
-    LaunchedEffect(uiState.isLoading) {
-        if (uiState.isLoading) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(uiState.result) {
+        if (uiState.result != null) {
             focusManager.clearFocus()
-            lazyListState.animateScrollToItem(2)
+            listState.animateScrollToItem(0)
         }
     }
-    
-    LaunchedEffect(uiState.itineraryResult) {
-        if (uiState.itineraryResult != null && !uiState.isLoading) {
-            lazyListState.animateScrollToItem(2)
-        }
-    }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "AI 行程規劃師",
-                        style = MaterialTheme.typography.headlineSmall,
+                        text = stringResource(R.string.ai_planner_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -84,7 +80,7 @@ fun PlannerScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "返回"
+                            contentDescription = stringResource(R.string.back_button)
                         )
                     }
                 },
@@ -93,43 +89,30 @@ fun PlannerScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-        },
-        modifier = modifier
+        }
     ) { paddingValues ->
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier
+        Column(
+            modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                UserInputSection(
-                    userInput = uiState.userInput,
-                    onInputChange = { input ->
-                        viewModel.onEvent(PlannerEvent.OnUserInputChanged(input))
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            
-            item {
-                GenerateButton(
-                    isLoading = uiState.isLoading,
-                    isEnabled = uiState.userInput.isNotBlank() && !uiState.isLoading,
-                    onClick = { viewModel.onEvent(PlannerEvent.GenerateItinerary) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            
-            item {
-                ResultDisplaySection(
-                    uiState = uiState,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            UserInputSection(
+                userInput = userInput,
+                onInputChange = viewModel::updateUserInput
+            )
+
+            GenerateButton(
+                isLoading = uiState.isLoading,
+                isEnabled = userInput.isNotBlank() && !uiState.isLoading,
+                onClick = { viewModel.generateItinerary() }
+            )
+
+            ResultDisplaySection(
+                uiState = uiState,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -144,27 +127,21 @@ private fun UserInputSection(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "請告訴我您的旅遊偏好...",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Medium
-        )
-        
         OutlinedTextField(
             value = userInput,
             onValueChange = onInputChange,
-            placeholder = {
-                Text(
-                    text = "例如：半日遊，喜歡看風景和喝咖啡",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp),
-            shape = RoundedCornerShape(12.dp),
-            maxLines = 4
+            label = { Text(stringResource(R.string.input_placeholder)) },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+            maxLines = 5,
+            shape = RoundedCornerShape(12.dp)
+        )
+        
+        Text(
+            text = stringResource(R.string.input_example),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp)
         )
     }
 }
@@ -179,13 +156,11 @@ private fun GenerateButton(
     Button(
         onClick = onClick,
         enabled = isEnabled,
-        modifier = modifier.height(56.dp),
-        shape = RoundedCornerShape(16.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
         Text(
-            text = if (isLoading) "生成中..." else "生成行程",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Medium
+            text = if (isLoading) stringResource(R.string.generate_button_loading) else stringResource(R.string.generate_button_idle),
+            fontSize = 16.sp
         )
     }
 }
@@ -195,70 +170,74 @@ private fun ResultDisplaySection(
     uiState: PlannerState,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        when {
-            uiState.isLoading -> LoadingContent()
-            uiState.error != null -> ErrorContent(error = uiState.error)
-            uiState.itineraryResult != null -> ItineraryResultContent(
-                result = uiState.itineraryResult,
-                modifier = Modifier.fillMaxWidth()
-            )
-            else -> EmptyContent()
-        }
+    when {
+        uiState.isLoading -> LoadingContent()
+        uiState.error != null -> ErrorContent(uiState.error)
+        uiState.result != null -> ItineraryResultContent(
+            result = uiState.result,
+            modifier = modifier
+        )
+        else -> EmptyContent()
     }
 }
 
 @Composable
 private fun LoadingContent() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(48.dp),
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = "AI 正在為您規劃行程...",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator()
+            Text(
+                text = stringResource(R.string.ai_planning_message),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
 @Composable
 private fun ErrorContent(error: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "發生錯誤",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.error,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = error,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.error_title),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = error,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
 @Composable
 private fun EmptyContent() {
-    Text(
-        text = "請輸入您的偏好，AI 將為您規劃專屬行程",
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-        lineHeight = 24.sp
-    )
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.empty_state_message),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 @Composable
@@ -266,37 +245,41 @@ private fun ItineraryResultContent(
     result: ItineraryResponse,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    LazyColumn(
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(vertical = 8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = result.title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Text(
-                text = result.summary,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                lineHeight = 22.sp
-            )
-            
-            result.steps.forEach { step ->
-                ItineraryStepCard(step = step)
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = result.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    if (result.summary.isNotBlank()) {
+                        Text(
+                            text = result.summary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
             }
+        }
+
+        items(result.steps.size) { index ->
+            ItineraryStepCard(step = result.steps[index])
         }
     }
 }
@@ -308,67 +291,59 @@ private fun ItineraryStepCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = "時間",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = step.time,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            
             Text(
                 text = step.activity,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = stringResource(R.string.time_icon_description),
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = step.time,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Place,
-                    contentDescription = "地點",
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(16.dp)
+                    contentDescription = stringResource(R.string.location_icon_description),
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = step.location,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.Medium
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
-            Text(
-                text = step.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 20.sp
-            )
+
+            if (step.description.isNotBlank()) {
+                Text(
+                    text = step.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 }
