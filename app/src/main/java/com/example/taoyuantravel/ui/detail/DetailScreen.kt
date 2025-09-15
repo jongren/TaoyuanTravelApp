@@ -92,6 +92,7 @@ fun DetailScreen(
                 }
             }
             state.error != null -> {
+                val errorMessage = state.error ?: "未知錯誤"
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -101,7 +102,7 @@ fun DetailScreen(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = state.error,
+                            text = errorMessage,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -234,6 +235,7 @@ fun DetailScreen(
                         Text(attraction.introduction, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
+            }
             }
         }
     }
