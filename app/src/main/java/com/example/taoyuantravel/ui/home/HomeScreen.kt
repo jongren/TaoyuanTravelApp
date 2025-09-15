@@ -41,6 +41,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -107,111 +112,72 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = stringResource(id = R.string.app_name),
-                        modifier = Modifier.graphicsLayer {
-                            alpha = topBarAlpha
-                            translationY = topBarTranslationY
-                        }
-                    ) 
+            HomeTopAppBar(
+                languages = state.languages,
+                onLanguageChange = { langCode ->
+                    viewModel.onEvent(HomeEvent.ChangeLanguage(langCode))
                 },
-                actions = {
-                    Box(
-                        modifier = Modifier.graphicsLayer {
-                            alpha = topBarAlpha
-                            translationY = topBarTranslationY
-                        }
-                    ) {
-                        IconButton(
-                            onClick = { menuExpanded = true },
-                            modifier = Modifier.scale(
-                                animateFloatAsState(
-                                    targetValue = if (menuExpanded) 1.1f else 1f,
-                                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                                    label = "iconScale"
-                                ).value
-                            )
-                        ) {
-                            Icon(Icons.Default.Language, contentDescription = "切換語系")
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false }
-                        ) {
-                            state.languages.forEach { lang ->
-                                DropdownMenuItem(
-                                    text = { Text(lang.displayName) },
-                                    onClick = {
-                                        viewModel.onEvent(HomeEvent.ChangeLanguage(lang.code))
-                                        menuExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.95f)
-                )
+                topBarAlpha = topBarAlpha,
+                topBarTranslationY = topBarTranslationY
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            val currentError = state.error
-            
-            // 內容動畫
-            val contentAlpha by animateFloatAsState(
-                targetValue = if (isVisible && !state.isLoading) 1f else 0f,
-                animationSpec = tween(durationMillis = 1000, delayMillis = 300, easing = FastOutSlowInEasing),
-                label = "contentAlpha"
-            )
-            
-            val contentTranslationY by animateFloatAsState(
-                targetValue = if (isVisible && !state.isLoading) 0f else 30f,
-                animationSpec = tween(durationMillis = 1000, delayMillis = 300, easing = FastOutSlowInEasing),
-                label = "contentTranslation"
-            )
-            
-            if (state.isLoading) {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(48.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        strokeWidth = 4.dp
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "載入中...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else if (currentError != null) {
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Text(
-                        text = "資料載入失敗: $currentError",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            } else {
+        HomeContent(
+            state = state,
+            navController = navController,
+            paddingValues = paddingValues,
+            isVisible = isVisible
+        )
+    }
+}
+
+/**
+ * 首頁內容組件，處理載入狀態、錯誤狀態和內容顯示
+ * 
+ * @param state 首頁狀態
+ * @param navController 導航控制器
+ * @param paddingValues 內邊距值
+ * @param isVisible 是否可見
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun HomeContent(
+    state: HomeState,
+    navController: NavController,
+    paddingValues: PaddingValues,
+    isVisible: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
+        val currentError = state.error
+        
+        // 內容動畫
+        val contentAlpha by animateFloatAsState(
+            targetValue = if (isVisible && !state.isLoading) 1f else 0f,
+            animationSpec = tween(durationMillis = 1000, delayMillis = 300, easing = FastOutSlowInEasing),
+            label = "contentAlpha"
+        )
+        
+        val contentTranslationY by animateFloatAsState(
+            targetValue = if (isVisible && !state.isLoading) 0f else 30f,
+            animationSpec = tween(durationMillis = 1000, delayMillis = 300, easing = FastOutSlowInEasing),
+            label = "contentTranslation"
+        )
+        
+        when {
+            state.isLoading -> {
+                LoadingContent(modifier = Modifier.align(Alignment.Center))
+            }
+            currentError != null -> {
+                ErrorContent(
+                    error = currentError,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            else -> {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -475,6 +441,126 @@ fun NewsItemHorizontalWithImage(
     }
 }
 
+
+/**
+ * 載入中內容組件
+ * 
+ * @param modifier 修飾符
+ */
+@Composable
+fun LoadingContent(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(48.dp),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 4.dp
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "載入中...",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/**
+ * 錯誤內容組件
+ * 
+ * @param error 錯誤訊息
+ * @param modifier 修飾符
+ */
+@Composable
+fun ErrorContent(
+    error: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        )
+    ) {
+        Text(
+            text = "資料載入失敗: $error",
+            modifier = Modifier.padding(16.dp),
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+/**
+ * 首頁頂部應用欄組件
+ * 
+ * @param languages 可選語言列表
+ * @param onLanguageChange 語言變更回調
+ * @param topBarAlpha 頂部欄透明度
+ * @param topBarTranslationY 頂部欄Y軸位移
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeTopAppBar(
+    languages: List<com.example.taoyuantravel.ui.model.Language>,
+    onLanguageChange: (String) -> Unit,
+    topBarAlpha: Float,
+    topBarTranslationY: Float
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    
+    TopAppBar(
+        title = { 
+            Text(
+                text = stringResource(id = R.string.app_name),
+                modifier = Modifier.graphicsLayer {
+                    alpha = topBarAlpha
+                    translationY = topBarTranslationY
+                }
+            ) 
+        },
+        actions = {
+            Box(
+                modifier = Modifier.graphicsLayer {
+                    alpha = topBarAlpha
+                    translationY = topBarTranslationY
+                }
+            ) {
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.scale(
+                        animateFloatAsState(
+                            targetValue = if (menuExpanded) 1.1f else 1f,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                            label = "iconScale"
+                        ).value
+                    )
+                ) {
+                    Icon(Icons.Default.Language, contentDescription = "切換語系")
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    languages.forEach { lang ->
+                        DropdownMenuItem(
+                            text = { Text(lang.displayName) },
+                            onClick = {
+                                onLanguageChange(lang.code)
+                                menuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.95f)
+        )
+    )
+}
 
 /**
  * 景點項目組件，顯示景點資訊卡片

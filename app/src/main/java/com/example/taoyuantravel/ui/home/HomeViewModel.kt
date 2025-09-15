@@ -56,7 +56,8 @@ class HomeViewModel @Inject constructor(
     private fun loadData() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            try {
+            
+            runCatching {
                 val currentLangCode = _state.value.selectedLanguage.code
 
                 val newsDeferred = async { repository.getNews(currentLangCode, 1) }
@@ -65,20 +66,33 @@ class HomeViewModel @Inject constructor(
                 val newsResponse = newsDeferred.await()
                 val attractionsResponse = attractionsDeferred.await()
 
-                val newsData = if (newsResponse.isSuccessful) newsResponse.body()?.infos?.data ?: emptyList() else emptyList()
-                val attractionsData = if (attractionsResponse.isSuccessful) attractionsResponse.body()?.infos?.data ?: emptyList() else emptyList()
+                val newsData = if (newsResponse.isSuccessful) {
+                    newsResponse.body()?.infos?.data ?: emptyList()
+                } else {
+                    emptyList()
+                }
+                
+                val attractionsData = if (attractionsResponse.isSuccessful) {
+                    attractionsResponse.body()?.infos?.data ?: emptyList()
+                } else {
+                    emptyList()
+                }
 
                 _state.update {
                     it.copy(
                         isLoading = false,
                         news = newsData,
-                        attractions = attractionsData
+                        attractions = attractionsData,
+                        error = null
                     )
                 }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _state.update { it.copy(isLoading = false, error = e.message ?: "未知錯誤") }
+            }.onFailure { exception ->
+                _state.update { 
+                    it.copy(
+                        isLoading = false, 
+                        error = exception.message ?: "未知錯誤"
+                    ) 
+                }
             }
         }
     }
