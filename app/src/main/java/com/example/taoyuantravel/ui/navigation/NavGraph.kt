@@ -6,6 +6,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,6 +16,8 @@ import com.example.taoyuantravel.ui.detail.DetailScreen
 import com.example.taoyuantravel.ui.detail.DetailViewModel
 import com.example.taoyuantravel.ui.home.HomeScreen
 import com.example.taoyuantravel.ui.home.HomeViewModel
+import com.example.taoyuantravel.ui.planner.PlannerScreen
+import com.example.taoyuantravel.ui.planner.PlannerViewModel
 import com.example.taoyuantravel.ui.webview.WebViewScreen
 
 @Composable
@@ -32,6 +35,28 @@ fun NavGraph(
                 navController = navController,
                 viewModel = homeViewModel
             )
+        }
+
+        composable(route = Screen.Planner.route) { backStackEntry ->
+            // 使用 LocalContext.current 獲取當前上下文
+            val context = LocalContext.current
+            
+            // 使用 CompositionLocalProvider 確保 PlannerScreen 使用正確的上下文
+            CompositionLocalProvider(LocalContext provides context) {
+                // 使用 androidx.lifecycle.viewmodel.compose.viewModel 而不是 hiltViewModel
+                val plannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel<com.example.taoyuantravel.ui.planner.PlannerViewModel>(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                            @Suppress("UNCHECKED_CAST")
+                            return com.example.taoyuantravel.ui.planner.PlannerViewModel() as T
+                        }
+                    }
+                )
+                PlannerScreen(
+                    navController = navController,
+                    viewModel = plannerViewModel
+                )
+            }
         }
 
         composable(

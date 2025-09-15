@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -121,7 +122,10 @@ fun HomeScreen(
                     viewModel.onEvent(HomeEvent.ChangeLanguage(langCode))
                 },
                 topBarAlpha = topBarAlpha,
-                topBarTranslationY = topBarTranslationY
+                topBarTranslationY = topBarTranslationY,
+                onPlannerClick = {
+                    navController.navigate(Screen.Planner.route)
+                }
             )
         }
     ) { paddingValues ->
@@ -510,7 +514,8 @@ fun HomeTopAppBar(
     languages: List<com.example.taoyuantravel.ui.model.Language>,
     onLanguageChange: (String) -> Unit,
     topBarAlpha: Float,
-    topBarTranslationY: Float
+    topBarTranslationY: Float,
+    onPlannerClick: () -> Unit = {}
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     
@@ -525,36 +530,53 @@ fun HomeTopAppBar(
             ) 
         },
         actions = {
-            Box(
+            Row(
                 modifier = Modifier.graphicsLayer {
                     alpha = topBarAlpha
                     translationY = topBarTranslationY
                 }
             ) {
+                // AI 行程規劃師按鈕
                 IconButton(
-                    onClick = { menuExpanded = true },
+                    onClick = onPlannerClick,
                     modifier = Modifier.scale(
                         animateFloatAsState(
-                            targetValue = if (menuExpanded) 1.1f else 1f,
+                            targetValue = 1f,
                             animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                            label = "iconScale"
+                            label = "plannerIconScale"
                         ).value
                     )
                 ) {
-                    Icon(Icons.Default.Language, contentDescription = "切換語系")
+                    Icon(Icons.Default.AutoAwesome, contentDescription = "AI 行程規劃師")
                 }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false }
-                ) {
-                    languages.forEach { lang ->
-                        DropdownMenuItem(
-                            text = { Text(lang.displayName) },
-                            onClick = {
-                                onLanguageChange(lang.code)
-                                menuExpanded = false
-                            }
+                
+                // 語言切換按鈕
+                Box {
+                    IconButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.scale(
+                            animateFloatAsState(
+                                targetValue = if (menuExpanded) 1.1f else 1f,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                label = "iconScale"
+                            ).value
                         )
+                    ) {
+                        Icon(Icons.Default.Language, contentDescription = "切換語系")
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        languages.forEach { lang ->
+                            DropdownMenuItem(
+                                text = { Text(lang.displayName) },
+                                onClick = {
+                                    onLanguageChange(lang.code)
+                                    menuExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
