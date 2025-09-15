@@ -11,7 +11,4 @@ import dagger.hilt.android.HiltAndroidApp
  * 這個註解是使用 Hilt 的必要起點。
  */
 @HiltAndroidApp
-class TaoyuanTravelApp : Application() {
-    // 目前不需要在這裡添加任何額外的程式碼
-    // Hilt 會在背景自動處理所有初始化工作
-}
+class TaoyuanTravelApp : Application()

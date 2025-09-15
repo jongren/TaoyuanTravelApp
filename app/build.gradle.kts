@@ -1,8 +1,18 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt")
+}
+
+// 讀取 local.properties 中的 API Key
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
 }
 
 android {
@@ -20,6 +30,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        
+        // 將 API Key 加入 BuildConfig
+        buildConfigField("String", "GEMINI_API_KEY", localProperties.getProperty("GEMINI_API_KEY") ?: "\"\"")
     }
 
     buildTypes {
@@ -40,6 +53,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.13"
@@ -81,11 +95,6 @@ dependencies {
 
     // Image Loading (Coil)
     implementation("io.coil-kt:coil-compose:2.6.0")
-
-    // Database (Room)
-    kapt("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

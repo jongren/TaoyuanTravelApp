@@ -3,6 +3,7 @@ package com.example.taoyuantravel.di
 import com.example.taoyuantravel.data.model.ListOrObjectAdapterFactory
 import com.example.taoyuantravel.data.source.remote.api.ApiConstants
 import com.example.taoyuantravel.data.source.remote.api.ApiService
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
@@ -37,16 +38,19 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        // 創建一個包含我們自訂 Adapter 的 Gson 實例
-        val gson = GsonBuilder()
+    fun provideGson(): Gson {
+        return GsonBuilder()
             .registerTypeAdapterFactory(ListOrObjectAdapterFactory())
             .create()
+    }
 
+    @Provides
+    @Singleton
+    fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
             .baseUrl(ApiConstants.BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson)) // 使用自訂的 Gson
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 

@@ -18,6 +18,10 @@ import com.example.taoyuantravel.ui.home.HomeScreen
 import com.example.taoyuantravel.ui.home.HomeViewModel
 import com.example.taoyuantravel.ui.planner.PlannerScreen
 import com.example.taoyuantravel.ui.planner.PlannerViewModel
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import com.google.gson.GsonBuilder
 import com.example.taoyuantravel.ui.webview.WebViewScreen
 
 @Composable
@@ -47,8 +51,33 @@ fun NavGraph(
                 val plannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel<com.example.taoyuantravel.ui.planner.PlannerViewModel>(
                     factory = object : ViewModelProvider.Factory {
                         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                            // 手動創建依賴
+                            val okHttpClient = OkHttpClient.Builder()
+                                .addInterceptor { chain ->
+                                    val original = chain.request()
+                                    val requestBuilder = original.newBuilder()
+                                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                                    val request = requestBuilder.build()
+                                    chain.proceed(request)
+                                }
+                                .build()
+                            
+                            // 創建 Gson 實例
+                            val gson = com.google.gson.GsonBuilder()
+                                .registerTypeAdapterFactory(com.example.taoyuantravel.data.model.ListOrObjectAdapterFactory())
+                                .create()
+                            
+                            val geminiRepository = com.example.taoyuantravel.data.repository.GeminiRepository(okHttpClient, gson)
+                            val retrofit = retrofit2.Retrofit.Builder()
+                                .baseUrl(com.example.taoyuantravel.data.source.remote.api.ApiConstants.BASE_URL)
+                                .client(okHttpClient)
+                                .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create(gson))
+                                .build()
+                            val apiService = retrofit.create(com.example.taoyuantravel.data.source.remote.api.ApiService::class.java)
+                            val taoyuanTravelRepository = com.example.taoyuantravel.data.repository.TaoyuanTravelRepositoryImpl(apiService)
+                            
                             @Suppress("UNCHECKED_CAST")
-                            return com.example.taoyuantravel.ui.planner.PlannerViewModel() as T
+                            return com.example.taoyuantravel.ui.planner.PlannerViewModel(geminiRepository, taoyuanTravelRepository) as T
                         }
                     }
                 )

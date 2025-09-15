@@ -45,11 +45,10 @@ fun WebViewScreen(
         if (encodedUrl != null) {
             try {
                 val decodedUrl = String(Base64.decode(encodedUrl, Base64.URL_SAFE))
-                Log.d("WebViewScreen", "解碼URL: $decodedUrl")
                 decodedUrl
             } catch (e: IllegalArgumentException) {
                 Log.e("WebViewScreen", "URL解碼失敗: $encodedUrl", e)
-                null // 如果解碼失敗則返回 null
+                null
             }
         } else {
             null
@@ -90,18 +89,7 @@ fun WebViewScreen(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
-                            // 自定義 WebViewClient 來處理錯誤和記錄日誌
                             webViewClient = object : WebViewClient() {
-                                override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                                    super.onPageStarted(view, url, favicon)
-                                    Log.d("WebViewScreen", "開始載入頁面: $url")
-                                }
-                                
-                                override fun onPageFinished(view: WebView?, url: String?) {
-                                    super.onPageFinished(view, url)
-                                    Log.d("WebViewScreen", "頁面載入完成: $url")
-                                }
-                                
                                 override fun onReceivedError(
                                     view: WebView?,
                                     request: WebResourceRequest?,
@@ -112,7 +100,6 @@ fun WebViewScreen(
                                 }
                                 
                                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                                    // 確保所有連結都在 WebView 內開啟
                                     return false
                                 }
                             }
