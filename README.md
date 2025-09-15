@@ -17,17 +17,28 @@
 - **流暢動畫**: 豐富的進場動畫和互動反饋
 - **雙欄式橫向佈局**: 充分利用橫向螢幕空間
 - **現代化 UI**: 卡片式設計，視覺層次分明
+- **組件化設計**: 高度模組化的 Composable 組件，提升可重用性
+- **完善錯誤處理**: 統一的載入和錯誤狀態管理
 
 ## 🛠 技術架構
+
+### 🏗️ 架構特色
+- **MVI 模式**: 採用 Model-View-Intent 架構，確保單向資料流
+- **狀態集中管理**: 使用 StateFlow 進行響應式狀態管理
+- **組件化設計**: 將大型 Composable 拆分為小型、可重用的組件
+- **錯誤處理機制**: 統一的錯誤處理和載入狀態管理
+- **代碼品質**: 完整的 KDoc 註解和統一的 coding style
 
 ### 開發技術
 - **語言**: Kotlin
 - **UI 框架**: Jetpack Compose
-- **架構模式**: MVVM (Model-View-ViewModel)
+- **架構模式**: MVI (Model-View-Intent) + MVVM
+- **狀態管理**: StateFlow + Compose State
 - **導航**: Navigation Compose
 - **圖片載入**: Coil
 - **網路請求**: Retrofit + OkHttp
 - **依賴注入**: Hilt
+- **錯誤處理**: runCatching + 統一錯誤狀態管理
 
 ## 📂 專案結構
 

@@ -27,34 +27,44 @@ class DetailViewModel @Inject constructor(
     val state: StateFlow<DetailState> = _state.asStateFlow()
 
     init {
+        loadAttractionData(savedStateHandle)
+    }
+
+    /**
+     * 載入景點資料
+     */
+    private fun loadAttractionData(savedStateHandle: SavedStateHandle) {
         // 從 savedStateHandle 中取得名為 "attractionJson" 的參數
-        savedStateHandle.get<String>("attractionJson")?.let { attractionJson ->
-            try {
-                // 使用 Gson 將 JSON 字串反序列化回 Attraction 物件
-                val attraction = Gson().fromJson(attractionJson, Attraction::class.java)
-/*
-                // 輸出API取得的資料log
-                val prettyGson = GsonBuilder().setPrettyPrinting().create()
-                val prettyJson = prettyGson.toJson(attraction)
-                Log.d("DetailViewModel", "景點資料: \n$prettyJson")
+        val attractionJson = savedStateHandle.get<String>("attractionJson")
+        
+        if (attractionJson == null) {
+            _state.update { 
+                it.copy(
+                    isLoading = false, 
+                    error = "無法取得景點資料"
+                ) 
+            }
+            return
+        }
 
-                // 輸出電話和官方網站資訊的log
-                val phoneLink = attraction.links?.items?.find { it.subject.contains("電話", ignoreCase = true) ||
-                                                              it.subject.contains("Tel", ignoreCase = true) ||
-                                                              it.subject.contains("Phone", ignoreCase = true) }
-                val websiteLink = attraction.links?.items?.find { it.subject.contains("網站", ignoreCase = true) ||
-                                                               it.subject.contains("網址", ignoreCase = true) ||
-                                                               it.subject.contains("官網", ignoreCase = true) ||
-                                                               it.subject.contains("Website", ignoreCase = true) ||
-                                                               it.subject.contains("Site", ignoreCase = true) }
-
-                Log.d("DetailViewModel", "電話: ${phoneLink?.src ?: "無電話資訊"}")
-                Log.d("DetailViewModel", "官方網站: ${websiteLink?.src ?: "無官方網站資訊"}")
- */
-                // 更新 UI 狀態
-                _state.update { it.copy(attraction = attraction) }
-            } catch (e: Exception) {
-                // 如果解析失敗，可以在這裡處理錯誤
+        runCatching {
+            // 使用 Gson 將 JSON 字串反序列化回 Attraction 物件
+            Gson().fromJson(attractionJson, Attraction::class.java)
+        }.onSuccess { attraction ->
+            _state.update { 
+                it.copy(
+                    attraction = attraction,
+                    isLoading = false,
+                    error = null
+                ) 
+            }
+        }.onFailure { exception ->
+            Log.e("DetailViewModel", "解析景點資料失敗", exception)
+            _state.update { 
+                it.copy(
+                    isLoading = false,
+                    error = "解析景點資料失敗：${exception.message}"
+                ) 
             }
         }
     }
