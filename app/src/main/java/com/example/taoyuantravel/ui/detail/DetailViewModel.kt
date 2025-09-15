@@ -13,9 +13,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
+/**
+ * 詳情頁ViewModel，管理景點詳情的UI狀態
+ * 
+ * @param savedStateHandle 用於存取導航參數的狀態處理器
+ */
 @HiltViewModel
 class DetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle // Hilt 會自動注入這個物件，用來存取導航參數
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DetailState())

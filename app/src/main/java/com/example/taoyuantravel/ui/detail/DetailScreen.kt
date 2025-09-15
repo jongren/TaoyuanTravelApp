@@ -5,14 +5,33 @@ import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,6 +53,12 @@ import com.example.taoyuantravel.data.model.Image
 import com.example.taoyuantravel.ui.navigation.Screen
 import java.nio.charset.StandardCharsets
 
+/**
+ * 景點詳情畫面，顯示景點的詳細資訊和圖片
+ * 
+ * @param navController 導航控制器，用於頁面跳轉
+ * @param viewModel 詳情頁的ViewModel，管理景點資料
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DetailScreen(
@@ -184,6 +209,11 @@ fun DetailScreen(
     }
 }
 
+/**
+ * 圖片項目組件，顯示單張景點圖片
+ * 
+ * @param image 圖片資料
+ */
 @Composable
 private fun ImageItem(image: Image) {
     AsyncImage(
@@ -199,6 +229,12 @@ private fun ImageItem(image: Image) {
     )
 }
 
+/**
+ * 資訊行組件，顯示標籤和對應的值
+ * 
+ * @param label 標籤文字
+ * @param value 對應的值
+ */
 @Composable
 private fun InfoRow(label: String, value: String) {
     if (value.isNotBlank()) {

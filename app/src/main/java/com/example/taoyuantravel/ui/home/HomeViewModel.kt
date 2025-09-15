@@ -13,6 +13,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 首頁ViewModel，管理首頁的UI狀態和業務邏輯
+ * 
+ * @param repository 桃園旅遊資料倉庫，用於獲取新聞和景點資料
+ */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: TaoyuanTravelRepository
@@ -25,6 +30,11 @@ class HomeViewModel @Inject constructor(
         loadData()
     }
 
+    /**
+     * 處理UI事件
+     * 
+     * @param event 要處理的事件
+     */
     fun onEvent(event: HomeEvent) {
         when (event) {
             is HomeEvent.ChangeLanguage -> {
@@ -40,6 +50,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 載入首頁資料（新聞和景點）
+     */
     private fun loadData() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }

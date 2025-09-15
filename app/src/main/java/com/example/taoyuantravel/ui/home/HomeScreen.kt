@@ -2,13 +2,27 @@ package com.example.taoyuantravel.ui.home
 
 import android.net.Uri
 import android.util.Base64
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -16,8 +30,24 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,14 +66,20 @@ import com.example.taoyuantravel.data.model.Attraction
 import com.example.taoyuantravel.data.model.News
 import com.example.taoyuantravel.ui.navigation.Screen
 import com.google.gson.Gson
-import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.delay
+import java.nio.charset.StandardCharsets
 
+/**
+ * 首頁畫面，顯示最新消息和熱門景點列表
+ * 
+ * @param navController 導航控制器，用於頁面跳轉
+ * @param viewModel 首頁的ViewModel，管理UI狀態和業務邏輯
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel // 直接接收 ViewModel，不再使用 hiltViewModel() 建立新實例
+    viewModel: HomeViewModel
 ) {
     val state by viewModel.state.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
@@ -311,6 +347,11 @@ fun HomeScreen(
     }
 }
 
+/**
+ * 列表標題組件，用於顯示區塊標題
+ * 
+ * @param title 要顯示的標題文字
+ */
 @Composable
 fun ListHeader(title: String) {
     Surface(
@@ -345,6 +386,13 @@ fun ListHeader(title: String) {
     }
 }
 
+/**
+ * 橫向新聞項目組件，包含圖片和文字內容
+ * 
+ * @param news 新聞資料
+ * @param onClick 點擊事件回調
+ * @param modifier 修飾符
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewsItemHorizontalWithImage(
@@ -428,6 +476,13 @@ fun NewsItemHorizontalWithImage(
 }
 
 
+/**
+ * 景點項目組件，顯示景點資訊卡片
+ * 
+ * @param attraction 景點資料
+ * @param onClick 點擊事件回調
+ * @param modifier 修飾符
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AttractionItem(
