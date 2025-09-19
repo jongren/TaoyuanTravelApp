@@ -6,5 +6,26 @@
     <string name="address">Address</string>
     <string name="open_time">Open Time</string>
     <string name="official_website">Official Website</string>
+    
+    <!-- Planner Screen -->
+    <string name="planner_title">AI Trip Planner</string>
+    <string name="back">Back</string>
+    <string name="travel_preferences_hint">Tell me your travel preferences...</string>
+    <string name="input_placeholder">e.g., Half-day tour, love scenery and coffee</string>
+    <string name="ai_planning">AI is planning your itinerary...</string>
+    <string name="error_occurred">An error occurred</string>
+    <string name="empty_state_message">Enter your preferences and AI will plan a personalized itinerary for you</string>
+    <string name="time">Time</string>
+    <string name="location">Location</string>
+    <string name="generating">Generating...</string>
+    <string name="generate_itinerary">Generate Itinerary</string>
+    
+    <!-- Map Screen -->
+    <string name="map_title">Attractions Map</string>
+    <string name="filter">Filter</string>
+    <string name="my_location">My Location</string>
+    <string name="loading_attractions">Loading attractions data...</string>
+    <string name="attraction_categories">Attraction Categories</string>
+    <string name="done">Done</string>
 </resources>
 

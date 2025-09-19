@@ -18,6 +18,28 @@ enum class Language(val code: String, val displayName: String, val locale: Local
     ES("es", "Español", Locale("es")),
     ID("id", "Indonesia", Locale("in")),
     TH("th", "ภาษาไทย", Locale("th")),
-    VI("vi", "Tiếng Việt", Locale("vi"))
+    VI("vi", "Tiếng Việt", Locale("vi"));
+
+    companion object {
+        /**
+         * 預設語系（繁體中文）
+         */
+        val TRADITIONAL_CHINESE = ZH_TW
+
+        /**
+         * 根據語系代碼取得對應的 Language
+         * @param code 語系代碼
+         * @return 對應的 Language，如果找不到則回傳預設語系
+         */
+        fun fromCode(code: String): Language {
+            return values().find { it.code.equals(code, ignoreCase = true) } 
+                ?: TRADITIONAL_CHINESE
+        }
+
+        /**
+         * 取得所有支援的語系
+         */
+        fun getAllLanguages(): List<Language> = values().toList()
+    }
 }
 

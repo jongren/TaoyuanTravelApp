@@ -24,8 +24,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.taoyuantravel.R
 import com.example.taoyuantravel.data.model.Attraction
+import com.example.taoyuantravel.ui.language.useLanguageEffect
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -40,10 +42,15 @@ import com.google.maps.android.compose.*
 @Composable
 fun MapScreen(
     navController: NavController,
-    viewModel: MapViewModel
+    viewModel: MapViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+    
+    // 響應語系變更
+    useLanguageEffect { language ->
+        viewModel.loadAttractions(language.code)
+    }
 
 
     // 桃園市中心座標
@@ -55,18 +62,18 @@ fun MapScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("景點地圖") },
+                title = { Text(stringResource(R.string.map_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.toggleFilter() }) {
-                        Icon(Icons.Default.FilterList, contentDescription = "篩選")
+                        Icon(Icons.Default.FilterList, contentDescription = stringResource(R.string.filter))
                     }
 /*                    IconButton(onClick = { viewModel.moveToUserLocation() }) {
-                        Icon(Icons.Default.MyLocation, contentDescription = "我的位置")
+                        Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.my_location))
                     }*/
                 }
             )
@@ -172,7 +179,7 @@ fun MapScreen(
                         ) {
                             CircularProgressIndicator(modifier = Modifier.size(24.dp))
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text("正在載入景點資料...")
+                            Text(stringResource(R.string.loading_attractions))
                         }
                     }
                 }
@@ -335,11 +342,11 @@ private fun FilterPanel(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "景點分類",
+                    text = stringResource(R.string.attraction_categories),
                     style = MaterialTheme.typography.titleMedium
                 )
                 TextButton(onClick = onDismiss) {
-                    Text("完成")
+                    Text(stringResource(R.string.done))
                 }
             }
 

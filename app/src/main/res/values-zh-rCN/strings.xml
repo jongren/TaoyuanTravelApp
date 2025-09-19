@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">桃园景点+</string>
+    <string name="latest_news">最新消息</string>
+    <string name="popular_attractions">热门景点</string>
+    <string name="attraction_details">景点详情</string>
+    <string name="address">地址</string>
+    <string name="open_time">开放时间</string>
+    <string name="official_website">前往官方网站</string>
+    
+    <!-- Planner Screen -->
+    <string name="planner_title">AI 行程规划师</string>
+    <string name="back">返回</string>
+    <string name="travel_preferences_hint">请告诉我您的旅游偏好...</string>
+    <string name="input_placeholder">例如：半日游，喜欢看风景和喝咖啡</string>
+    <string name="ai_planning">AI 正在为您规划行程...</string>
+    <string name="error_occurred">发生错误</string>
+    <string name="empty_state_message">请输入您的偏好，AI 将为您规划专属行程</string>
+    <string name="time">时间</string>
+    <string name="location">地点</string>
+    <string name="generating">生成中...</string>
+    <string name="generate_itinerary">生成行程</string>
+    
+    <!-- Map Screen -->
+    <string name="map_title">景点地图</string>
+    <string name="filter">筛选</string>
+    <string name="my_location">我的位置</string>
+    <string name="loading_attractions">正在加载景点数据...</string>
+    <string name="attraction_categories">景点分类</string>
+    <string name="done">完成</string>
+</resources>
