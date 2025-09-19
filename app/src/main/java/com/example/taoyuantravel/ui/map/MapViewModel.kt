@@ -22,30 +22,6 @@ class MapViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "MapViewModel"
-        
-        // 桃園知名景點手動坐標對照表
-        private val MANUAL_COORDINATES = mapOf(
-            "大溪老街" to Pair(24.8838, 121.2888),
-            "慈湖" to Pair(24.8642, 121.2736),
-            "石門水庫" to Pair(24.8167, 121.2500),
-            "拉拉山" to Pair(24.7167, 121.4167),
-            "角板山" to Pair(24.8167, 121.3500),
-            "小烏來瀑布" to Pair(24.8167, 121.3667),
-            "桃園國際機場" to Pair(25.0797, 121.2342),
-            "中壢夜市" to Pair(24.9536, 121.2252),
-            "青埔高鐵站" to Pair(24.9136, 121.2161),
-            "華泰名品城" to Pair(24.9136, 121.2161),
-            "桃園忠烈祠" to Pair(24.9936, 121.3010),
-            "虎頭山公園" to Pair(24.9936, 121.3010),
-            "大園花海" to Pair(25.0597, 121.2042),
-            "觀音蓮花園" to Pair(25.0297, 121.1342),
-            "永安漁港" to Pair(25.0197, 121.2042),
-            "竹圍漁港" to Pair(25.1397, 121.4042),
-            "龍潭大池" to Pair(24.8636, 121.2152),
-            "三坑老街" to Pair(24.8336, 121.2452),
-            "大溪花海農場" to Pair(24.8738, 121.2988),
-            "小人國主題樂園" to Pair(24.8336, 121.2152)
-        )
     }
 
     private val _state = MutableStateFlow(MapUiState())
@@ -101,41 +77,31 @@ class MapViewModel @Inject constructor(
     private suspend fun geocodeAttractions(attractions: List<Attraction>): List<Attraction> {
         return attractions.map { attraction ->
             if (attraction.latitude == null || attraction.longitude == null) {
-                // 首先檢查手動坐標對照表
-                val manualCoordinates = findManualCoordinates(attraction.name)
-                if (manualCoordinates != null) {
-                    attraction.copy(
-                        latitude = manualCoordinates.first,
-                        longitude = manualCoordinates.second,
-                        category = categorizeAttraction(attraction)
-                    )
-                } else {
-                    // 如果手動坐標表中沒有，則嘗試地理編碼
-                    try {
-                        val address = extractAddress(attraction)
-                        if (address.isNotEmpty()) {
-                            val response = geocodingRepository.geocodeAddress(address)
-                            if (response.isSuccessful && response.body()?.status == "OK") {
-                                val location = response.body()?.results?.firstOrNull()?.geometry?.location
-                                location?.let {
-                                    attraction.copy(
-                                        latitude = it.lat,
-                                        longitude = it.lng,
-                                        category = categorizeAttraction(attraction)
-                                    )
-                                } ?: run {
-                                    attraction.copy(category = categorizeAttraction(attraction))
-                                }
-                            } else {
+                // 嘗試地理編碼
+                try {
+                    val address = extractAddress(attraction)
+                    if (address.isNotEmpty()) {
+                        val response = geocodingRepository.geocodeAddress(address)
+                        if (response.isSuccessful && response.body()?.status == "OK") {
+                            val location = response.body()?.results?.firstOrNull()?.geometry?.location
+                            location?.let {
+                                attraction.copy(
+                                    latitude = it.lat,
+                                    longitude = it.lng,
+                                    category = categorizeAttraction(attraction)
+                                )
+                            } ?: run {
                                 attraction.copy(category = categorizeAttraction(attraction))
                             }
                         } else {
                             attraction.copy(category = categorizeAttraction(attraction))
                         }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "景點 ${attraction.name} 地理編碼異常", e)
+                    } else {
                         attraction.copy(category = categorizeAttraction(attraction))
                     }
+                } catch (e: Exception) {
+                    Log.e(TAG, "景點 ${attraction.name} 地理編碼異常", e)
+                    attraction.copy(category = categorizeAttraction(attraction))
                 }
             } else {
                 attraction.copy(category = categorizeAttraction(attraction))
@@ -143,22 +109,7 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 從手動坐標對照表中查找景點坐標
-     */
-    private fun findManualCoordinates(attractionName: String): Pair<Double, Double>? {
-        // 直接匹配
-        MANUAL_COORDINATES[attractionName]?.let { return it }
-        
-        // 模糊匹配 - 檢查景點名稱是否包含對照表中的關鍵字
-        for ((key, coordinates) in MANUAL_COORDINATES) {
-            if (attractionName.contains(key) || key.contains(attractionName)) {
-                return coordinates
-            }
-        }
-        
-        return null
-    }
+
 
     /**
      * 從景點資料中提取地址

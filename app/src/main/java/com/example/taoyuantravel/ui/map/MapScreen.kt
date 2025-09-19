@@ -48,8 +48,7 @@ fun MapScreen(
                 // Google Play Services 可用
             }
             else -> {
-                Log.e("MapScreen", "Google Play Services不可用，錯誤代碼: $resultCode")
-                Log.e("MapScreen", "錯誤描述: ${googleApiAvailability.getErrorString(resultCode)}")
+                // Google Play Services 不可用
             }
         }
     }
