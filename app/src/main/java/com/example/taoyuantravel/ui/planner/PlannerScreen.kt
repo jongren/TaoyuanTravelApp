@@ -37,12 +37,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.taoyuantravel.R
+import com.example.taoyuantravel.ui.language.useLanguageEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,12 +57,18 @@ fun PlannerScreen(
 ) {
     val uiState by viewModel.state.collectAsState()
     
+    // 響應語系變更
+    useLanguageEffect { language ->
+        // PlannerScreen 主要處理用戶輸入和生成行程，不需要重新加載數據
+        // 但可以在這裡添加任何需要響應語系變更的邏輯
+    }
+    
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "AI 行程規劃師",
+                        text = stringResource(R.string.planner_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -69,7 +79,7 @@ fun PlannerScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "返回"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -129,7 +139,7 @@ private fun UserInputSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "請告訴我您的旅遊偏好...",
+            text = stringResource(R.string.travel_preferences_hint),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium
@@ -140,7 +150,7 @@ private fun UserInputSection(
             onValueChange = onInputChange,
             placeholder = {
                 Text(
-                    text = "例如：半日遊，喜歡看風景和喝咖啡",
+                    text = stringResource(R.string.input_placeholder),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -207,7 +217,7 @@ private fun LoadingContent() {
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = "AI 正在為您規劃行程...",
+            text = stringResource(R.string.ai_planning),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -221,7 +231,7 @@ private fun ErrorContent(error: String) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "發生錯誤",
+            text = stringResource(R.string.error_occurred),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.error,
             fontWeight = FontWeight.Bold
@@ -238,7 +248,7 @@ private fun ErrorContent(error: String) {
 @Composable
 private fun EmptyContent() {
     Text(
-        text = "請輸入您的偏好，AI 將為您規劃專屬行程",
+        text = stringResource(R.string.empty_state_message),
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -293,7 +303,7 @@ private fun ItineraryItemCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Schedule,
-                        contentDescription = "時間",
+                        contentDescription = stringResource(R.string.time),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
@@ -320,7 +330,7 @@ private fun ItineraryItemCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Place,
-                    contentDescription = "地點",
+                    contentDescription = stringResource(R.string.location),
                     tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(18.dp)
                 )
@@ -368,14 +378,14 @@ private fun GenerateButton(
                     strokeWidth = 2.dp
                 )
                 Text(
-                    text = "生成中...",
+                    text = stringResource(R.string.generating),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Medium
                 )
             }
         } else {
             Text(
-                text = "生成行程",
+                text = stringResource(R.string.generate_itinerary),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Medium
             )

@@ -65,6 +65,11 @@ android {
         kotlinCompilerExtensionVersion = "1.5.13"
     }
     packaging {
+        jniLibs {
+            useLegacyPackaging = true
+            // 確保 DataStore native library 正確處理
+            pickFirsts += "**/libdatastore_shared_counter.so"
+        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
@@ -101,6 +106,9 @@ dependencies {
 
     // Image Loading (Coil)
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // DataStore for preferences
+    implementation(libs.androidx.datastore.preferences)
 
     // Google Maps & Location Services
     implementation("com.google.android.gms:play-services-maps:18.2.0")

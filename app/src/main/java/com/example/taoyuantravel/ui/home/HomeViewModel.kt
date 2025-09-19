@@ -2,6 +2,7 @@ package com.example.taoyuantravel.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.taoyuantravel.data.language.LanguageManager
 import com.example.taoyuantravel.data.repository.TaoyuanTravelRepository
 import com.example.taoyuantravel.ui.model.Language
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,17 +18,31 @@ import javax.inject.Inject
  * 首頁ViewModel，管理首頁的UI狀態和業務邏輯
  * 
  * @param repository 桃園旅遊資料倉庫，用於獲取新聞和景點資料
+ * @param languageManager 語系管理器，用於處理語系切換和持久化
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: TaoyuanTravelRepository
+    private val repository: TaoyuanTravelRepository,
+    private val languageManager: LanguageManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
     val state: StateFlow<HomeState> = _state.asStateFlow()
 
     init {
-        loadData()
+        initializeLanguage()
+    }
+
+    /**
+     * 初始化語系設定
+     */
+    private fun initializeLanguage() {
+        viewModelScope.launch {
+            languageManager.getCurrentLanguage().collect { language ->
+                _state.update { it.copy(selectedLanguage = language) }
+                loadData()
+            }
+        }
     }
 
     /**
@@ -38,12 +53,15 @@ class HomeViewModel @Inject constructor(
     fun onEvent(event: HomeEvent) {
         when (event) {
             is HomeEvent.ChangeLanguage -> {
-                // 根據傳入的 langCode 找到對應的 Language 物件
-                val newLang = state.value.languages.find { it.code == event.langCode }
-                // 只有在語言真的改變時才觸發更新和重載
-                if (newLang != null && newLang != _state.value.selectedLanguage) {
-                    _state.update { it.copy(selectedLanguage = newLang) }
-                    loadData()
+                viewModelScope.launch {
+                    // 根據傳入的 langCode 找到對應的 Language 物件
+                    val newLang = Language.fromCode(event.langCode)
+                    // 只有在語言真的改變時才觸發更新
+                    if (newLang != _state.value.selectedLanguage) {
+                        // 使用 LanguageManager 進行語系切換和持久化
+                        languageManager.setLanguage(newLang)
+                        // 狀態會透過 initializeLanguage 中的 collect 自動更新
+                    }
                 }
             }
             HomeEvent.LoadData -> loadData()

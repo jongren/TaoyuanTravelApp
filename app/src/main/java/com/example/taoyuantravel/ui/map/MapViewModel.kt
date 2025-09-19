@@ -2,6 +2,7 @@ package com.example.taoyuantravel.ui.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.taoyuantravel.data.language.LanguageManager
 import com.example.taoyuantravel.data.model.Attraction
 import com.example.taoyuantravel.data.repository.GeocodingRepository
 import com.example.taoyuantravel.data.repository.TaoyuanTravelRepository
@@ -16,14 +17,16 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val travelRepository: TaoyuanTravelRepository,
-    private val geocodingRepository: GeocodingRepository
+    private val geocodingRepository: GeocodingRepository,
+    private val languageManager: LanguageManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MapUiState())
     val state: StateFlow<MapUiState> = _state.asStateFlow()
 
     init {
-        loadAttractions()
+        // 初始載入預設語系的資料
+        loadAttractions("zh-tw")
     }
 
     /**

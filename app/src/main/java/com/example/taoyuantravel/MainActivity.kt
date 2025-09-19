@@ -10,40 +10,58 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import com.example.taoyuantravel.data.language.LanguageManager
 import com.example.taoyuantravel.ui.home.HomeViewModel
+import com.example.taoyuantravel.ui.language.LanguageProvider
 import com.example.taoyuantravel.ui.navigation.NavGraph
 import com.example.taoyuantravel.ui.theme.TaoyuanTravelTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Locale
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    @Inject
+    lateinit var languageManager: LanguageManager
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // 初始化語系設定
+        lifecycleScope.launch {
+            languageManager.initializeLanguage()
+        }
         setContent {
-            val homeViewModel: HomeViewModel = hiltViewModel()
-            val state by homeViewModel.state.collectAsState()
+            // 提供全局語系狀態
+            LanguageProvider {
+                val homeViewModel: HomeViewModel = hiltViewModel()
+                val state by homeViewModel.state.collectAsState()
 
-            // 使用我們自訂的 Wrapper Composable 來應用語言設定
-            LocaleWrapper(locale = state.selectedLanguage.locale) {
-                TaoyuanTravelTheme {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        val navController = rememberNavController()
-                        // 將共享的 viewModel 實例傳遞給 NavGraph
-                        NavGraph(
-                            navController = navController,
-                            homeViewModel = homeViewModel
-                        )
+                // 使用我們自訂的 Wrapper Composable 來應用語言設定
+                LocaleWrapper(locale = state.selectedLanguage.locale) {
+                    TaoyuanTravelTheme {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MaterialTheme.colorScheme.background
+                        ) {
+                            val navController = rememberNavController()
+                            // 將共享的 viewModel 實例傳遞給 NavGraph
+                            NavGraph(
+                                navController = navController,
+                                homeViewModel = homeViewModel
+                            )
+                        }
                     }
                 }
             }

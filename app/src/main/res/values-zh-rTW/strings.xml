@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">桃園旅遊</string>
+    
+    <!-- Navigation -->
+    <string name="home">首頁</string>
+    <string name="planner">行程規劃</string>
+    <string name="map">地圖</string>
+    
+    <!-- Home Screen -->
+    <string name="welcome_title">歡迎來到桃園</string>
+    <string name="welcome_subtitle">探索美麗的桃園景點</string>
+    <string name="featured_attractions">精選景點</string>
+    <string name="view_all">查看全部</string>
+    <string name="search_hint">搜尋景點...</string>
+    <string name="loading">載入中...</string>
+    <string name="error_loading_data">載入資料時發生錯誤</string>
+    <string name="retry">重試</string>
+    <string name="no_attractions_found">找不到景點</string>
+    
+    <!-- Language Settings -->
+    <string name="language_settings">語言設定</string>
+    <string name="language_traditional_chinese">繁體中文</string>
+    <string name="language_simplified_chinese">简体中文</string>
+    <string name="language_english">English</string>
+    
+    <!-- Planner Screen -->
+    <string name="planner_title">AI 行程規劃師</string>
+    <string name="back">返回</string>
+    <string name="travel_preferences_hint">請告訴我您的旅遊偏好...</string>
+    <string name="input_placeholder">例如：半日遊，喜歡看風景和喝咖啡</string>
+    <string name="ai_planning">AI 正在為您規劃行程...</string>
+    <string name="error_occurred">發生錯誤</string>
+    <string name="empty_state_message">請輸入您的偏好，AI 將為您規劃專屬行程</string>
+    <string name="time">時間</string>
+    <string name="location">地點</string>
+    <string name="generating">生成中...</string>
+    <string name="generate_itinerary">生成行程</string>
+    
+    <!-- Map Screen -->
+    <string name="map_title">景點地圖</string>
+    <string name="filter">篩選</string>
+    <string name="my_location">我的位置</string>
+    <string name="loading_attractions">正在載入景點資料...</string>
+    <string name="attraction_categories">景點分類</string>
+    <string name="done">完成</string>
+</resources>
