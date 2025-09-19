@@ -32,6 +32,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -125,6 +127,9 @@ fun HomeScreen(
                 topBarTranslationY = topBarTranslationY,
                 onPlannerClick = {
                     navController.navigate(Screen.Planner.route)
+                },
+                onMapClick = {
+                    navController.navigate(Screen.Map.route)
                 }
             )
         }
@@ -515,7 +520,8 @@ fun HomeTopAppBar(
     onLanguageChange: (String) -> Unit,
     topBarAlpha: Float,
     topBarTranslationY: Float,
-    onPlannerClick: () -> Unit = {}
+    onPlannerClick: () -> Unit = {},
+    onMapClick: () -> Unit = {}
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     
@@ -536,6 +542,20 @@ fun HomeTopAppBar(
                     translationY = topBarTranslationY
                 }
             ) {
+                // 地圖按鈕
+                IconButton(
+                    onClick = onMapClick,
+                    modifier = Modifier.scale(
+                        animateFloatAsState(
+                            targetValue = 1f,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                            label = "mapIconScale"
+                        ).value
+                    )
+                ) {
+                    Icon(Icons.Default.Map, contentDescription = "景點地圖")
+                }
+                
                 // AI 行程規劃師按鈕
                 IconButton(
                     onClick = onPlannerClick,

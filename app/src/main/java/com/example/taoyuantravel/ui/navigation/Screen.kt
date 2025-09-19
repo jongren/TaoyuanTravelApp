@@ -3,6 +3,7 @@ package com.example.taoyuantravel.ui.navigation
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Planner : Screen("planner")
+    object Map : Screen("map")
 
     // 1. 定義帶有參數的基礎路徑
     object Detail : Screen("detail/{attractionJson}") {

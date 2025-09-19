@@ -1,3 +1,13 @@
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { stream ->
+        localProperties.load(stream)
+    }
+}
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -20,6 +30,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        // 簡化的 API Key 處理
+        val apiKey = localProperties.getProperty("GOOGLE_MAPS_API_KEY") ?: "\"\""
+        buildConfigField("String", "GOOGLE_MAPS_API_KEY", apiKey)
+        
+        // 將 API Key 加入 Manifest 佔位符
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = apiKey.removeSurrounding("\"")
     }
 
     buildTypes {
@@ -40,6 +56,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.13"
@@ -53,10 +70,10 @@ android {
 
 dependencies {
     // Core & Appcompat
-    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
-    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.activity:activity-compose:1.8.2")
 
     // Compose
     implementation(platform("androidx.compose:compose-bom:2024.05.00"))
@@ -82,10 +99,11 @@ dependencies {
     // Image Loading (Coil)
     implementation("io.coil-kt:coil-compose:2.6.0")
 
-    // Database (Room)
-    kapt("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
+    // Google Maps & Location Services
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+    implementation("com.google.maps.android:maps-compose:4.3.3")
+    implementation("com.google.maps.android:android-maps-utils:3.8.2")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

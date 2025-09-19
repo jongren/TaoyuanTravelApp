@@ -25,5 +25,16 @@ data class Attraction(
     val images: ImageWrapper? = null,
 
     @SerializedName("Links")
-    val links: LinkWrapper? = null
+    val links: LinkWrapper? = null,
+
+    // 地理座標資訊 (透過 Geocoding API 取得)
+    @SerializedName("Latitude")
+    val latitude: Double? = null,
+
+    @SerializedName("Longitude")
+    val longitude: Double? = null,
+
+    // 景點分類 (用於地圖篩選)
+    @SerializedName("Category")
+    val category: String = "景點"
 )

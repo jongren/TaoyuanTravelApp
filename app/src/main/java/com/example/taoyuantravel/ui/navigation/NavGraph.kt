@@ -19,6 +19,7 @@ import com.example.taoyuantravel.ui.home.HomeViewModel
 import com.example.taoyuantravel.ui.planner.PlannerScreen
 import com.example.taoyuantravel.ui.planner.PlannerViewModel
 import com.example.taoyuantravel.ui.webview.WebViewScreen
+import com.example.taoyuantravel.ui.map.MapScreen
 
 @Composable
 fun NavGraph(
@@ -55,6 +56,65 @@ fun NavGraph(
                 PlannerScreen(
                     navController = navController,
                     viewModel = plannerViewModel
+                )
+            }
+        }
+
+        composable(Screen.Map.route) {
+            // 使用 LocalContext.current 獲取當前上下文
+            val context = LocalContext.current
+            
+            // 使用 CompositionLocalProvider 確保 MapScreen 使用正確的上下文
+            CompositionLocalProvider(LocalContext provides context) {
+                // 使用 androidx.lifecycle.viewmodel.compose.viewModel 而不是 hiltViewModel
+                val mapViewModel = androidx.lifecycle.viewmodel.compose.viewModel<com.example.taoyuantravel.ui.map.MapViewModel>(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                            // 手動創建依賴
+                            val okHttpClient = OkHttpClient.Builder()
+                                .addInterceptor { chain ->
+                                    val original = chain.request()
+                                    val requestBuilder = original.newBuilder()
+                                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                                    val request = requestBuilder.build()
+                                    chain.proceed(request)
+                                }
+                                .build()
+                            
+                            // 創建 Gson 實例
+                            val gson = com.google.gson.GsonBuilder()
+                                .registerTypeAdapterFactory(com.example.taoyuantravel.data.model.ListOrObjectAdapterFactory())
+                                .create()
+                            
+                            // 創建 Retrofit 實例
+                            val retrofit = retrofit2.Retrofit.Builder()
+                                .baseUrl(com.example.taoyuantravel.data.source.remote.api.ApiConstants.BASE_URL)
+                                .client(okHttpClient)
+                                .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create(gson))
+                                .build()
+                            
+                            // 創建 API 服務
+                            val apiService = retrofit.create(com.example.taoyuantravel.data.source.remote.api.ApiService::class.java)
+                            val travelRepository = com.example.taoyuantravel.data.repository.TaoyuanTravelRepositoryImpl(apiService)
+                            
+                            // 創建 Google Maps Retrofit 實例
+                            val googleMapsRetrofit = retrofit2.Retrofit.Builder()
+                                .baseUrl("https://maps.googleapis.com/maps/api/")
+                                .client(okHttpClient)
+                                .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create(gson))
+                                .build()
+                            
+                            val geocodingService = googleMapsRetrofit.create(com.example.taoyuantravel.data.source.remote.api.GeocodingService::class.java)
+                            val geocodingRepository = com.example.taoyuantravel.data.repository.GeocodingRepositoryImpl(geocodingService)
+                            
+                            @Suppress("UNCHECKED_CAST")
+                            return com.example.taoyuantravel.ui.map.MapViewModel(travelRepository, geocodingRepository) as T
+                        }
+                    }
+                )
+                MapScreen(
+                    navController = navController,
+                    viewModel = mapViewModel
                 )
             }
         }

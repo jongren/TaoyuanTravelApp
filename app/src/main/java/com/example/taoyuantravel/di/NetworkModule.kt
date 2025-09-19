@@ -1,8 +1,12 @@
 package com.example.taoyuantravel.di
 
 import com.example.taoyuantravel.data.model.ListOrObjectAdapterFactory
+import com.example.taoyuantravel.data.repository.GeocodingRepository
+import com.example.taoyuantravel.data.repository.GeocodingRepositoryImpl
 import com.example.taoyuantravel.data.source.remote.api.ApiConstants
 import com.example.taoyuantravel.data.source.remote.api.ApiService
+import com.example.taoyuantravel.data.source.remote.api.GeocodingService
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
@@ -12,7 +16,19 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+/**
+ * 用於區分不同的 Retrofit 實例
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class TaoyuanApi
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GoogleMapsApi
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -43,6 +59,10 @@ object NetworkModule {
             .registerTypeAdapterFactory(ListOrObjectAdapterFactory())
             .create()
 
+    @Provides
+    @Singleton
+    @TaoyuanApi
+    fun provideTaoyuanRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
             .baseUrl(ApiConstants.BASE_URL)
             .client(okHttpClient)
@@ -52,7 +72,30 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
+    @GoogleMapsApi
+    fun provideGoogleMapsRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://maps.googleapis.com/maps/api/")
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideApiService(@TaoyuanApi retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeocodingService(@GoogleMapsApi retrofit: Retrofit): GeocodingService {
+        return retrofit.create(GeocodingService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeocodingRepository(geocodingService: GeocodingService): GeocodingRepository {
+        return GeocodingRepositoryImpl(geocodingService)
     }
 }
