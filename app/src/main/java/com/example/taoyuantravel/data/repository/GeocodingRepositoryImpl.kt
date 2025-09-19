@@ -29,7 +29,6 @@ class GeocodingRepositoryImpl @Inject constructor(
                 throw IllegalStateException("Google Maps Geocoding API Key 未設定")
             }
 
-            Log.d(TAG, "使用地理編碼 API 金鑰進行地址查詢: $address")
             geocodingService.geocodeAddress(address, apiKey)
         } catch (e: Exception) {
             Log.e(TAG, "地理編碼失敗: $address", e)

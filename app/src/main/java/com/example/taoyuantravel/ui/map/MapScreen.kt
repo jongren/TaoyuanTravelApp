@@ -3,8 +3,10 @@ package com.example.taoyuantravel.ui.map
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
@@ -13,10 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import androidx.navigation.NavController
 import com.example.taoyuantravel.R
 import com.example.taoyuantravel.data.model.Attraction
@@ -38,30 +44,12 @@ fun MapScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
-    
-    // 檢查Google Play Services可用性
-    LaunchedEffect(Unit) {
-        val googleApiAvailability = GoogleApiAvailability.getInstance()
-        val resultCode = googleApiAvailability.isGooglePlayServicesAvailable(context)
-        when (resultCode) {
-            ConnectionResult.SUCCESS -> {
-                // Google Play Services 可用
-            }
-            else -> {
-                // Google Play Services 不可用
-            }
-        }
-    }
+
 
     // 桃園市中心座標
     val taoyuanCenter = LatLng(24.9936, 121.3010)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taoyuanCenter, 10f) // 降低縮放級別以顯示更大範圍
-    }
-    
-    // 當景點載入完成後，調整地圖視角以包含所有景點
-    LaunchedEffect(state.filteredAttractions) {
-        // 調整地圖視角以包含所有景點
     }
 
     Scaffold(
@@ -77,9 +65,9 @@ fun MapScreen(
                     IconButton(onClick = { viewModel.toggleFilter() }) {
                         Icon(Icons.Default.FilterList, contentDescription = "篩選")
                     }
-                    IconButton(onClick = { viewModel.moveToUserLocation() }) {
+/*                    IconButton(onClick = { viewModel.moveToUserLocation() }) {
                         Icon(Icons.Default.MyLocation, contentDescription = "我的位置")
-                    }
+                    }*/
                 }
             )
         }
@@ -89,7 +77,6 @@ fun MapScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Google Maps - 簡化配置用於測試
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
@@ -101,7 +88,7 @@ fun MapScreen(
                     isIndoorEnabled = false
                 ),
                 uiSettings = MapUiSettings(
-                    zoomControlsEnabled = true, // 啟用縮放控制以便測試
+                    zoomControlsEnabled = true,
                     myLocationButtonEnabled = false,
                     compassEnabled = true,
                     rotationGesturesEnabled = true,
@@ -109,12 +96,12 @@ fun MapScreen(
                     tiltGesturesEnabled = true,
                     zoomGesturesEnabled = true
                 ),
-                onMapLoaded = {
+/*                onMapLoaded = {
                     // 地圖載入完成
                 },
                 onMapClick = { latLng ->
                     // 地圖被點擊
-                }
+                }*/
             ) {
                 // 景點標記
                 state.filteredAttractions.forEach { attraction ->
@@ -124,11 +111,10 @@ fun MapScreen(
                         Marker(
                             state = MarkerState(position = position),
                             title = attraction.name,
-                            snippet = attraction.introduction.take(100),
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED), // 使用紅色標記
                             onClick = { marker ->
                                 viewModel.selectAttraction(attraction)
-                                false // 返回 false 以顯示預設的資訊視窗
+                                true // 返回 true 以不顯示預設的資訊視窗
                             }
                         )
                     }
@@ -149,7 +135,7 @@ fun MapScreen(
             }
 
             // 狀態指示器 - 用於調試
-            Card(
+/*            Card(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(16.dp),
@@ -167,7 +153,7 @@ fun MapScreen(
                     Text(text = "有坐標: ${state.filteredAttractions.count { it.latitude != null && it.longitude != null }}")
                     Text(text = "載入中: ${if (state.isLoading) "是" else "否"}")
                 }
-            }
+            }*/
 
             // 載入指示器
             if (state.isLoading) {
@@ -192,11 +178,135 @@ fun MapScreen(
                 }
             }
 
-            // 錯誤訊息
-            state.errorMessage?.let { error ->
-                LaunchedEffect(error) {
-                    // 可以在這裡顯示 Snackbar 或其他錯誤提示
+            // 景點詳細資訊面板
+            state.selectedAttraction?.let { attraction ->
+                AttractionDetailPanel(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp),
+                    attraction = attraction,
+                    onDismiss = { viewModel.selectAttraction(null) }
+                )
+            }
+
+        }
+    }
+}
+
+/**
+ * 景點詳細資訊面板
+ */
+@Composable
+private fun AttractionDetailPanel(
+    modifier: Modifier = Modifier,
+    attraction: Attraction,
+    onDismiss: () -> Unit
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // 標題列
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = attraction.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "關閉",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 圖片顯示
+            attraction.images?.items?.firstOrNull()?.let { image ->
+                if (image.src.isNotEmpty()) {
+                    AsyncImage(
+                        model = image.src,
+                        contentDescription = image.subject.ifEmpty { attraction.name },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+
+            // 地址資訊
+            if (attraction.address.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = "地址：",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = attraction.address,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // 開放時間
+            if (attraction.openTime.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = "開放時間：",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = attraction.openTime,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // 景點簡介
+            if (attraction.introduction.isNotEmpty()) {
+                Text(
+                    text = "簡介：",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = attraction.introduction,
+                    style = MaterialTheme.typography.bodyMedium,
+                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.4,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

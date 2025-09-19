@@ -1,6 +1,5 @@
 package com.example.taoyuantravel.ui.map
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.taoyuantravel.data.model.Attraction
@@ -19,10 +18,6 @@ class MapViewModel @Inject constructor(
     private val travelRepository: TaoyuanTravelRepository,
     private val geocodingRepository: GeocodingRepository
 ) : ViewModel() {
-
-    companion object {
-        private const val TAG = "MapViewModel"
-    }
 
     private val _state = MutableStateFlow(MapUiState())
     val state: StateFlow<MapUiState> = _state.asStateFlow()
@@ -46,35 +41,23 @@ class MapViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             
             try {
-                Log.d(TAG, "開始載入景點資料，語言: $language")
                 val response = travelRepository.getAttractions(language, 1)
-                Log.d(TAG, "API 回應狀態: ${response.code()}, 成功: ${response.isSuccessful}")
                 
                 if (!response.isSuccessful) {
-                    Log.e(TAG, "API 調用失敗，狀態碼: ${response.code()}, 錯誤訊息: ${response.errorBody()?.string()}")
                     throw Exception("無法獲取景點資料，狀態碼: ${response.code()}")
                 }
                 
                 val apiResponse = response.body()
                 if (apiResponse == null) {
-                    Log.e(TAG, "API 回應 body 為空")
                     throw Exception("回應資料為空")
                 }
                 
-                Log.d(TAG, "API 回應結構 - 總數: ${apiResponse.infos.declaration.total}")
                 val attractions = apiResponse.infos.data
-                Log.d(TAG, "獲取到 ${attractions.size} 個景點")
-                
-                // 記錄前幾個景點的基本資訊
-                attractions.take(3).forEachIndexed { index, attraction ->
-                    Log.d(TAG, "景點 $index: ${attraction.name}, 地址: ${attraction.address}")
-                }
                 
                 // 為沒有座標的景點進行地理編碼
                 val attractionsWithCoordinates = geocodeAttractions(attractions)
                 
                 val categories = extractCategories(attractionsWithCoordinates)
-                Log.d(TAG, "提取到的分類: $categories")
                 
                 _state.update { currentState ->
                     currentState.copy(
@@ -84,9 +67,7 @@ class MapViewModel @Inject constructor(
                         isLoading = false
                     )
                 }
-                Log.d(TAG, "景點資料載入完成，共 ${attractionsWithCoordinates.size} 個景點")
             } catch (e: Exception) {
-                Log.e(TAG, "載入景點資料時發生錯誤", e)
                 _state.update { 
                     it.copy(
                         isLoading = false, 
@@ -101,63 +82,46 @@ class MapViewModel @Inject constructor(
      * 為景點進行地理編碼
      */
     private suspend fun geocodeAttractions(attractions: List<Attraction>): List<Attraction> {
-        Log.d(TAG, "開始為 ${attractions.size} 個景點進行地理編碼")
         return attractions.map { attraction ->
-            // 保留景點原始的分類，除非地理編碼成功時更新
             var updatedAttraction = attraction.copy(category = categorizeAttraction(attraction))
 
             if (attraction.latitude == null || attraction.longitude == null) {
-                Log.d(TAG, "景點 ${attraction.name} 需要地理編碼。")
                 try {
                     val address = extractAddress(attraction)
-                    Log.d(TAG, "景點 ${attraction.name} - 提取地址: '$address'")
                     if (address.isNotEmpty()) {
                         val response = geocodingRepository.geocodeAddress(address)
                         if (response.isSuccessful && response.body()?.status == "OK") {
                             val result = response.body()?.results?.firstOrNull()
                             val location = result?.geometry?.location
                             if (location != null) {
-                                Log.i(TAG, "景點 ${attraction.name} - 地理編碼成功: (${location.lat}, ${location.lng})")
-                                updatedAttraction = attraction.copy( // Re-copy from original attraction
+                                updatedAttraction = attraction.copy(
                                     latitude = location.lat,
                                     longitude = location.lng,
-                                    category = categorizeAttraction(attraction) // Re-apply category
+                                    category = categorizeAttraction(attraction)
                                 )
-                            } else {
-                                Log.w(TAG, "景點 ${attraction.name} - 地理編碼成功但未找到位置。狀態: ${response.body()?.status}, 地址: '$address'")
                             }
-                        } else {
-                            Log.e(TAG, "景點 ${attraction.name} - 地理編碼API呼叫失敗。狀態: ${response.body()?.status}, 地址: '$address'")
                         }
-                    } else {
-                        Log.w(TAG, "景點 ${attraction.name} - 提取的地址為空，跳過地理編碼。")
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "景點 ${attraction.name} - 地理編碼時發生異常。", e)
+                    // 地理編碼失敗時保持原始景點資料
                 }
             } else {
-                Log.d(TAG, "景點 ${attraction.name} 已有座標: (${attraction.latitude}, ${attraction.longitude})")
-                // Make sure category is still applied if coordinates already exist
                 updatedAttraction = attraction.copy(category = categorizeAttraction(attraction))
             }
-            updatedAttraction // Return the (potentially) updated attraction
+            updatedAttraction
         }
     }
-
-
 
     /**
      * 從景點資料中提取地址
      */
     private fun extractAddress(attraction: Attraction): String {
-        // 嘗試從介紹中提取地址資訊
         val introduction = attraction.introduction
         val addressKeywords = listOf("地址", "位於", "桃園市", "桃園縣")
         
         for (keyword in addressKeywords) {
             val index = introduction.indexOf(keyword)
             if (index != -1) {
-                // 提取包含關鍵字後的一段文字作為地址
                 val addressStart = if (keyword == "地址") index + keyword.length else index
                 val addressEnd = minOf(
                     introduction.indexOf("。", addressStart).takeIf { it != -1 } ?: introduction.length,
@@ -165,13 +129,12 @@ class MapViewModel @Inject constructor(
                     addressStart + 100
                 )
                 val address = introduction.substring(addressStart, addressEnd).trim()
-                if (address.length > 5) { // 確保地址有意義
+                if (address.length > 5) {
                     return "桃園市$address"
                 }
             }
         }
         
-        // 如果沒有找到具體地址，使用景點名稱 + 桃園市
         return "桃園市 ${attraction.name}"
     }
 
@@ -238,7 +201,7 @@ class MapViewModel @Inject constructor(
     /**
      * 選擇景點
      */
-    fun selectAttraction(attraction: Attraction) {
+    fun selectAttraction(attraction: Attraction?) {
         _state.update { it.copy(selectedAttraction = attraction) }
     }
 
@@ -247,7 +210,6 @@ class MapViewModel @Inject constructor(
      */
     fun moveToUserLocation() {
         // 這裡可以實現獲取使用者位置的邏輯
-        // 暫時先不實現，因為需要位置權限處理
     }
 
     /**
