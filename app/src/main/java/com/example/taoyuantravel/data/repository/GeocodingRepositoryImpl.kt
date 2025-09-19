@@ -23,12 +23,13 @@ class GeocodingRepositoryImpl @Inject constructor(
 
     override suspend fun geocodeAddress(address: String): Response<GeocodingResponse> {
         return try {
-            val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
+            val apiKey = BuildConfig.GOOGLE_MAPS_GEOCODING_API_KEY
             if (apiKey.isEmpty()) {
-                Log.e(TAG, "Google Maps API Key 未設定")
-                throw IllegalStateException("Google Maps API Key 未設定")
+                Log.e(TAG, "Google Maps Geocoding API Key 未設定")
+                throw IllegalStateException("Google Maps Geocoding API Key 未設定")
             }
 
+            Log.d(TAG, "使用地理編碼 API 金鑰進行地址查詢: $address")
             geocodingService.geocodeAddress(address, apiKey)
         } catch (e: Exception) {
             Log.e(TAG, "地理編碼失敗: $address", e)

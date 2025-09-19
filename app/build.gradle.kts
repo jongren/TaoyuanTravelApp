@@ -30,12 +30,15 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        // 簡化的 API Key 處理
-        val apiKey = localProperties.getProperty("GOOGLE_MAPS_API_KEY") ?: "\"\""
-        buildConfigField("String", "GOOGLE_MAPS_API_KEY", apiKey)
+        // API Key 處理
+        val mapsApiKey = localProperties.getProperty("GOOGLE_MAPS_API_KEY") ?: "\"\""
+        val geocodingApiKey = localProperties.getProperty("GOOGLE_MAPS_GEOCODING_API_KEY") ?: "\"\""
         
-        // 將 API Key 加入 Manifest 佔位符
-        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = apiKey.removeSurrounding("\"")
+        buildConfigField("String", "GOOGLE_MAPS_API_KEY", mapsApiKey)
+        buildConfigField("String", "GOOGLE_MAPS_GEOCODING_API_KEY", geocodingApiKey)
+        
+        // 將 Maps API Key 加入 Manifest 佔位符
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = mapsApiKey.removeSurrounding("\"")
     }
 
     buildTypes {
