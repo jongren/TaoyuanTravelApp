@@ -1,7 +1,6 @@
 package com.example.taoyuantravel.ui.detail
 
 import android.util.Base64
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -206,7 +205,7 @@ fun DetailScreen(
                                             fullUrl
                                         }
 
-                                        Log.d("DetailScreen", "processedUrl: $processedUrl fullRul: $fullUrl")
+                        
                                         val encodedUrl = Base64.encodeToString(processedUrl.toByteArray(StandardCharsets.UTF_8), Base64.URL_SAFE)
                                         navController.navigate(Screen.WebView.createRoute(encodedUrl, attraction.name))
                                     },

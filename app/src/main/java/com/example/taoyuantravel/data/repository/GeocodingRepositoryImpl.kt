@@ -29,7 +29,6 @@ class GeocodingRepositoryImpl @Inject constructor(
                 throw IllegalStateException("Google Maps API Key 未設定")
             }
 
-            Log.d(TAG, "正在進行地理編碼: $address")
             geocodingService.geocodeAddress(address, apiKey)
         } catch (e: Exception) {
             Log.e(TAG, "地理編碼失敗: $address", e)
@@ -47,14 +46,11 @@ class GeocodingRepositoryImpl @Inject constructor(
                     val location = response.body()?.results?.firstOrNull()?.geometry?.location
                     if (location != null) {
                         result[address] = Pair(location.lat, location.lng)
-                        Log.d(TAG, "地理編碼成功: $address -> (${location.lat}, ${location.lng})")
                     } else {
                         result[address] = null
-                        Log.w(TAG, "地理編碼無結果: $address")
                     }
                 } else {
                     result[address] = null
-                    Log.w(TAG, "地理編碼失敗: $address, 狀態: ${response.body()?.status}")
                 }
                 
                 // 避免超過 API 請求限制

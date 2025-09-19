@@ -1,6 +1,5 @@
 package com.example.taoyuantravel.ui.detail
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.example.taoyuantravel.data.model.Attraction
@@ -59,7 +58,7 @@ class DetailViewModel @Inject constructor(
                 ) 
             }
         }.onFailure { exception ->
-            Log.e("DetailViewModel", "解析景點資料失敗", exception)
+
             _state.update { 
                 it.copy(
                     isLoading = false,

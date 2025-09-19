@@ -13,7 +13,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Qualifier
@@ -37,8 +36,6 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
-        val logging = HttpLoggingInterceptor()
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
         return OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val original = chain.request()
@@ -47,17 +44,17 @@ object NetworkModule {
                 val request = requestBuilder.build()
                 chain.proceed(request)
             }
-            .addInterceptor(logging)
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    fun provideGson(): Gson {
         // 創建一個包含我們自訂 Adapter 的 Gson 實例
-        val gson = GsonBuilder()
+        return GsonBuilder()
             .registerTypeAdapterFactory(ListOrObjectAdapterFactory())
             .create()
+    }
 
     @Provides
     @Singleton

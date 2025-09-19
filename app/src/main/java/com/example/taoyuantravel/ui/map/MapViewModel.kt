@@ -63,7 +63,6 @@ class MapViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             
             try {
-                Log.d(TAG, "開始載入景點資料...")
                 val response = travelRepository.getAttractions("zh-tw", 1)
                 if (!response.isSuccessful) {
                     throw Exception("無法獲取景點資料")
@@ -71,11 +70,9 @@ class MapViewModel @Inject constructor(
                 
                 val apiResponse = response.body() ?: throw Exception("回應資料為空")
                 val attractions = apiResponse.infos.data
-                Log.d(TAG, "成功載入 ${attractions.size} 個景點")
                 
                 // 為沒有座標的景點進行地理編碼
                 val attractionsWithCoordinates = geocodeAttractions(attractions)
-                Log.d(TAG, "地理編碼完成，有座標的景點數量: ${attractionsWithCoordinates.count { it.latitude != null && it.longitude != null }}")
                 
                 val categories = extractCategories(attractionsWithCoordinates)
                 
@@ -102,13 +99,11 @@ class MapViewModel @Inject constructor(
      * 為景點進行地理編碼
      */
     private suspend fun geocodeAttractions(attractions: List<Attraction>): List<Attraction> {
-        Log.d(TAG, "開始為 ${attractions.size} 個景點進行地理編碼")
         return attractions.map { attraction ->
             if (attraction.latitude == null || attraction.longitude == null) {
                 // 首先檢查手動坐標對照表
                 val manualCoordinates = findManualCoordinates(attraction.name)
                 if (manualCoordinates != null) {
-                    Log.d(TAG, "景點 ${attraction.name} 使用手動坐標: (${manualCoordinates.first}, ${manualCoordinates.second})")
                     attraction.copy(
                         latitude = manualCoordinates.first,
                         longitude = manualCoordinates.second,
@@ -118,28 +113,23 @@ class MapViewModel @Inject constructor(
                     // 如果手動坐標表中沒有，則嘗試地理編碼
                     try {
                         val address = extractAddress(attraction)
-                        Log.d(TAG, "景點 ${attraction.name} 提取的地址: $address")
                         if (address.isNotEmpty()) {
                             val response = geocodingRepository.geocodeAddress(address)
                             if (response.isSuccessful && response.body()?.status == "OK") {
                                 val location = response.body()?.results?.firstOrNull()?.geometry?.location
                                 location?.let {
-                                    Log.d(TAG, "景點 ${attraction.name} 地理編碼成功: (${it.lat}, ${it.lng})")
                                     attraction.copy(
                                         latitude = it.lat,
                                         longitude = it.lng,
                                         category = categorizeAttraction(attraction)
                                     )
                                 } ?: run {
-                                    Log.w(TAG, "景點 ${attraction.name} 地理編碼無結果")
                                     attraction.copy(category = categorizeAttraction(attraction))
                                 }
                             } else {
-                                Log.w(TAG, "景點 ${attraction.name} 地理編碼失敗，狀態: ${response.body()?.status}")
                                 attraction.copy(category = categorizeAttraction(attraction))
                             }
                         } else {
-                            Log.w(TAG, "景點 ${attraction.name} 無法提取地址")
                             attraction.copy(category = categorizeAttraction(attraction))
                         }
                     } catch (e: Exception) {
@@ -148,7 +138,6 @@ class MapViewModel @Inject constructor(
                     }
                 }
             } else {
-                Log.d(TAG, "景點 ${attraction.name} 已有座標: (${attraction.latitude}, ${attraction.longitude})")
                 attraction.copy(category = categorizeAttraction(attraction))
             }
         }

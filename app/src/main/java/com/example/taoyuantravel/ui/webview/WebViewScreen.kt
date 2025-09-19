@@ -1,7 +1,6 @@
 package com.example.taoyuantravel.ui.webview
 
 import android.util.Base64
-import android.util.Log
 import android.view.ViewGroup
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -45,10 +44,9 @@ fun WebViewScreen(
         if (encodedUrl != null) {
             try {
                 val decodedUrl = String(Base64.decode(encodedUrl, Base64.URL_SAFE))
-                Log.d("WebViewScreen", "解碼URL: $decodedUrl")
+        
                 decodedUrl
             } catch (e: IllegalArgumentException) {
-                Log.e("WebViewScreen", "URL解碼失敗: $encodedUrl", e)
                 null // 如果解碼失敗則返回 null
             }
         } else {
@@ -94,12 +92,10 @@ fun WebViewScreen(
                             webViewClient = object : WebViewClient() {
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                     super.onPageStarted(view, url, favicon)
-                                    Log.d("WebViewScreen", "開始載入頁面: $url")
                                 }
                                 
                                 override fun onPageFinished(view: WebView?, url: String?) {
                                     super.onPageFinished(view, url)
-                                    Log.d("WebViewScreen", "頁面載入完成: $url")
                                 }
                                 
                                 override fun onReceivedError(
@@ -108,7 +104,6 @@ fun WebViewScreen(
                                     error: WebResourceError?
                                 ) {
                                     super.onReceivedError(view, request, error)
-                                    Log.e("WebViewScreen", "載入錯誤 - URL: ${request?.url}, 錯誤代碼: ${error?.errorCode}, 描述: ${error?.description}")
                                 }
                                 
                                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {

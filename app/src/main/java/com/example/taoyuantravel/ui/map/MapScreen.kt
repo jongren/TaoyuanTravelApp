@@ -1,6 +1,5 @@
 package com.example.taoyuantravel.ui.map
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -46,21 +45,12 @@ fun MapScreen(
         val resultCode = googleApiAvailability.isGooglePlayServicesAvailable(context)
         when (resultCode) {
             ConnectionResult.SUCCESS -> {
-                Log.d("MapScreen", "Google Play Services可用")
+                // Google Play Services 可用
             }
             else -> {
                 Log.e("MapScreen", "Google Play Services不可用，錯誤代碼: $resultCode")
                 Log.e("MapScreen", "錯誤描述: ${googleApiAvailability.getErrorString(resultCode)}")
             }
-        }
-        
-        // 檢查API Key配置
-        try {
-            val packageInfo = context.packageManager.getApplicationInfo(context.packageName, android.content.pm.PackageManager.GET_META_DATA)
-            val apiKey = packageInfo.metaData?.getString("com.google.android.geo.API_KEY")
-            Log.d("MapScreen", "Google Maps API Key 狀態: ${if (apiKey.isNullOrEmpty()) "未設置" else "已設置 (${apiKey.take(10)}...)"}")
-        } catch (e: Exception) {
-            Log.e("MapScreen", "無法檢查API Key: ${e.message}")
         }
     }
 
@@ -72,12 +62,7 @@ fun MapScreen(
     
     // 當景點載入完成後，調整地圖視角以包含所有景點
     LaunchedEffect(state.filteredAttractions) {
-        if (state.filteredAttractions.isNotEmpty()) {
-            val attractionsWithCoords = state.filteredAttractions.filter { 
-                it.latitude != null && it.longitude != null 
-            }
-            Log.d("MapScreen", "準備調整地圖視角，包含 ${attractionsWithCoords.size} 個景點")
-        }
+        // 調整地圖視角以包含所有景點
     }
 
     Scaffold(
@@ -126,24 +111,16 @@ fun MapScreen(
                     zoomGesturesEnabled = true
                 ),
                 onMapLoaded = {
-                    Log.d("MapScreen", "✅ Google地圖載入完成！")
-                    Log.d("MapScreen", "✅ 地圖可見性: 地圖已渲染並可見")
-                    Log.d("MapScreen", "✅ 地圖瓦片應該現在可以顯示")
-                    Log.d("MapScreen", "✅ 當前縮放級別: ${cameraPositionState.position.zoom}")
-                    Log.d("MapScreen", "✅ 當前中心點: ${cameraPositionState.position.target}")
+                    // 地圖載入完成
                 },
                 onMapClick = { latLng ->
-                    Log.d("MapScreen", "🎯 地圖被點擊: ${latLng.latitude}, ${latLng.longitude}")
+                    // 地圖被點擊
                 }
             ) {
                 // 景點標記
-                Log.d("MapScreen", "總景點數量: ${state.filteredAttractions.size}")
-                Log.d("MapScreen", "有座標的景點數量: ${state.filteredAttractions.count { it.latitude != null && it.longitude != null }}")
-                
                 state.filteredAttractions.forEach { attraction ->
                     if (attraction.latitude != null && attraction.longitude != null) {
                         val position = LatLng(attraction.latitude, attraction.longitude)
-                        Log.d("MapScreen", "顯示標記: ${attraction.name} at (${attraction.latitude}, ${attraction.longitude})")
                         
                         Marker(
                             state = MarkerState(position = position),
