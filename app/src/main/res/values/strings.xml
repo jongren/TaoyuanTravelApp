@@ -1,5 +1,29 @@
 <resources>
     <string name="app_name">桃園景點+</string>
+    
+    <!-- Navigation -->
+    <string name="home">首頁</string>
+    <string name="planner">行程規劃</string>
+    <string name="map">地圖</string>
+    
+    <!-- Home Screen -->
+    <string name="welcome_title">歡迎來到桃園</string>
+    <string name="welcome_subtitle">探索美麗的桃園景點</string>
+    <string name="featured_attractions">精選景點</string>
+    <string name="view_all">查看全部</string>
+    <string name="search_hint">搜尋景點...</string>
+    <string name="loading">載入中...</string>
+    <string name="error_loading_data">載入資料時發生錯誤</string>
+    <string name="retry">重試</string>
+    <string name="no_attractions_found">找不到景點</string>
+    
+    <!-- Language Settings -->
+    <string name="language_settings">語言設定</string>
+    <string name="language_traditional_chinese">繁體中文</string>
+    <string name="language_simplified_chinese">简体中文</string>
+    <string name="language_english">English</string>
+    
+    <!-- Common -->
     <string name="latest_news">最新消息</string>
     <string name="popular_attractions">熱門景點</string>
     <string name="attraction_details">景點詳情</string>
