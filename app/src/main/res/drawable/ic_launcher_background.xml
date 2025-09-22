@@ -1,170 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#3DDC84"
-        android:pathData="M0,0h108v108h-108z" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M9,0L9,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,0L19,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M29,0L29,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M39,0L39,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M49,0L49,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M59,0L59,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M69,0L69,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M79,0L79,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M89,0L89,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M99,0L99,108"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,9L108,9"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,19L108,19"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,29L108,29"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,39L108,39"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,49L108,49"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,59L108,59"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,69L108,69"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,79L108,79"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,89L108,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,99L108,99"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,29L89,29"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,39L89,39"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,49L89,49"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,59L89,59"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,69L89,69"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M19,79L89,79"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M29,19L29,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M39,19L39,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M49,19L49,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M59,19L59,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M69,19L69,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M79,19L79,89"
-        android:strokeWidth="0.8"
-        android:strokeColor="#33FFFFFF" />
+    
+    <!-- 背景漸變 (地圖風格) -->
+    <path android:pathData="M0,0 L108,0 L108,108 L0,108 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108"
+                android:type="linear">
+                <item android:color="#F0F8FF" android:offset="0.0"/>
+                <item android:color="#E6F3FF" android:offset="0.5"/>
+                <item android:color="#D1E7FF" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    
+    <!-- 地圖網格線 (垂直線) -->
+    <path android:pathData="M20,0 L20,108"
+          android:strokeColor="#E0E0E0"
+          android:strokeWidth="0.5"
+          android:strokeAlpha="0.6"/>
+    <path android:pathData="M40,0 L40,108"
+          android:strokeColor="#E0E0E0"
+          android:strokeWidth="0.5"
+          android:strokeAlpha="0.6"/>
+    <path android:pathData="M60,0 L60,108"
+          android:strokeColor="#E0E0E0"
+          android:strokeWidth="0.5"
+          android:strokeAlpha="0.6"/>
+    <path android:pathData="M80,0 L80,108"
+          android:strokeColor="#E0E0E0"
+          android:strokeWidth="0.5"
+          android:strokeAlpha="0.6"/>
+    
+    <!-- 地圖網格線 (水平線) -->
+    <path android:pathData="M0,20 L108,20"
+          android:strokeColor="#E0E0E0"
+          android:strokeWidth="0.5"
+          android:strokeAlpha="0.6"/>
+    <path android:pathData="M0,40 L108,40"
+          android:strokeColor="#E0E0E0"
+          android:strokeWidth="0.5"
+          android:strokeAlpha="0.6"/>
+    <path android:pathData="M0,60 L108,60"
+          android:strokeColor="#E0E0E0"
+          android:strokeWidth="0.5"
+          android:strokeAlpha="0.6"/>
+    <path android:pathData="M0,80 L108,80"
+          android:strokeColor="#E0E0E0"
+          android:strokeWidth="0.5"
+          android:strokeAlpha="0.6"/>
+    
+    <!-- 路線路徑 (彎曲的導航路線) -->
+    <path android:pathData="M15,85 Q30,70 45,75 Q60,80 75,65 Q90,50 95,35"
+          android:strokeColor="#4CAF50"
+          android:strokeWidth="2"
+          android:strokeAlpha="0.8"/>
+    
+    <!-- 路線上的小圓點 (路徑點) -->
+    <circle android:centerX="15" android:centerY="85"
+            android:radius="2dp"
+            android:fillColor="#4CAF50"/>
+    <circle android:centerX="45" android:centerY="75"
+            android:radius="2dp"
+            android:fillColor="#4CAF50"/>
+    <circle android:centerX="75" android:centerY="65"
+            android:radius="2dp"
+            android:fillColor="#4CAF50"/>
+    <circle android:centerX="95" android:centerY="35"
+            android:radius="2dp"
+            android:fillColor="#4CAF50"/>
+    
 </vector>
