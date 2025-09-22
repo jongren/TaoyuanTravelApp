@@ -50,8 +50,11 @@ class LanguageManager @Inject constructor(
     private fun applyLanguageToContext(language: Language) {
         // 直接使用 Language 枚舉中預定義的 locale，避免重複解析
         val locale = language.locale
-        val configuration = Configuration(context.resources.configuration)
         
+        // 設定全局預設 Locale，這會影響 Google Maps 等系統組件
+        Locale.setDefault(locale)
+        
+        val configuration = Configuration(context.resources.configuration)
         configuration.setLocale(locale)
         configuration.setLocales(LocaleList(locale))
         
@@ -65,7 +68,7 @@ class LanguageManager @Inject constructor(
         val systemLocale = context.resources.configuration.locales[0]
         val languageCode = "${systemLocale.language}-${systemLocale.country}".lowercase()
         
-        return Language.values().find { it.code == languageCode } 
+        return Language.entries.find { it.code == languageCode }
             ?: Language.TRADITIONAL_CHINESE // 預設為繁體中文
     }
 
