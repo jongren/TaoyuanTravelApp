@@ -3,12 +3,12 @@
 一個專為桃園旅遊設計的 Android 應用程式，基於桃園觀光旅遊網 Open API 所打造，提供最新旅遊資訊、熱門景點推薦和 AI 智能行程規劃的完整旅遊體驗
 
 ## 📱 最新版本
-**版本**: v1.1 (Build 2)  
-**發布日期**: 2025年1月16日  
+**版本**: v1.3
+**發布日期**: 2025年9月22日  
 **APK 大小**: 約 7.4 MB
 
 ### 📥 下載連結
-- [📱 下載 APK (v1.1)](https://github.com/YOUR_USERNAME/TaoyuanTravel/releases/latest)
+- [📱 下載 APK (v1.3)](https://github.com/YOUR_USERNAME/TaoyuanTravel/releases/latest)
 - [📋 查看完整更新日誌](https://github.com/YOUR_USERNAME/TaoyuanTravel/releases)
 
 ## 📱 應用特色
@@ -17,7 +17,7 @@
 ### 🌟 核心功能
 - **🤖 AI 智能行程規劃**: 基於 Google Gemini AI 的個人化旅遊行程建議
   - 根據用戶需求智能推薦桃園景點
-  - 支援多語言 AI 回應 (繁體中文/英文)
+  - 支援多語言 AI 回應 (繁體中文/簡體中文/英文)
   - 動態語言同步，確保 AI 使用對應語言的景點資料
 - **📰 最新消息**: 即時獲取桃園旅遊相關新聞和活動資訊
 - **🏞️ 熱門景點**: 精選桃園必訪景點，包含詳細介紹和美麗圖片
