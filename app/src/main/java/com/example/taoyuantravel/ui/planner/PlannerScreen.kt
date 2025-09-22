@@ -1,20 +1,25 @@
 package com.example.taoyuantravel.ui.planner
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
@@ -33,13 +38,21 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -58,17 +71,14 @@ fun PlannerScreen(
     val uiState by viewModel.uiState.collectAsState()
     val userInput by viewModel.userInput.collectAsState()
     val focusManager = LocalFocusManager.current
-    val listState = rememberLazyListState()
 
+    // 當有新的行程結果生成時，自動收起鍵盤。
     LaunchedEffect(uiState.result) {
         if (uiState.result != null) {
             focusManager.clearFocus()
-            listState.animateScrollToItem(0)
         }
     }
 
-    // 語言效果處理已在MainActivity的LocaleWrapper中統一處理
-    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -81,7 +91,7 @@ fun PlannerScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back_button)
                         )
                     }
@@ -93,41 +103,69 @@ fun PlannerScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        // **核心結構變更：使用 Box 來實現圖層疊加效果**
+        Box(
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            UserInputSection(
-                userInput = userInput,
-                onInputChange = viewModel::updateUserInput
-            )
+            var inputSectionHeight by remember { mutableStateOf(0) }
+            val density = LocalDensity.current
+            val inputSectionHeightDp = with(density) { inputSectionHeight.toDp() }
 
-            GenerateButton(
-                isLoading = uiState.isLoading,
-                isEnabled = userInput.isNotBlank() && !uiState.isLoading,
-                onClick = { viewModel.generateItinerary() }
-            )
+            val listState = rememberLazyListState()
 
+            // **核心動畫邏輯：根據滾動偏移量計算 Y 軸位移**
+            val translationY by remember {
+                derivedStateOf {
+                    // 只有當第一個列表項可見時，才進行位移計算
+                    if (listState.firstVisibleItemIndex == 0) {
+                        // 將滾動偏移量轉換為負的 Y 軸位移
+                        -listState.firstVisibleItemScrollOffset.toFloat()
+                    } else {
+                        // 當第一個列表項完全滾出畫面後，將輸入區塊完全隱藏
+                        -inputSectionHeight.toFloat()
+                    }
+                }
+            }
+
+            // 結果顯示區塊作為背景層，它負責滾動
             ResultDisplaySection(
                 uiState = uiState,
-                modifier = Modifier.weight(1f)
+                listState = listState,
+                topPadding = inputSectionHeightDp // 傳入頂部間距，為輸入區塊留出空間
+            )
+
+            // 輸入區塊作為前景層，它會根據背景的滾動而移動
+            InputSection(
+                userInput = userInput,
+                onInputChange = { viewModel.updateUserInput(it) },
+                isLoading = uiState.isLoading,
+                onGenerateClick = { viewModel.generateItinerary() },
+                modifier = Modifier
+                    .onSizeChanged { inputSectionHeight = it.height }
+                    .graphicsLayer {
+                        // 應用計算出的 Y 軸位移，並確保它不會超出範圍
+                        this.translationY = translationY.coerceIn(-inputSectionHeight.toFloat(), 0f)
+                    }
             )
         }
     }
 }
 
 @Composable
-private fun UserInputSection(
+private fun InputSection(
     userInput: String,
     onInputChange: (String) -> Unit,
+    isLoading: Boolean,
+    onGenerateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surface) // 增加背景色，避免列表內容透出
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         OutlinedTextField(
             value = userInput,
@@ -138,55 +176,53 @@ private fun UserInputSection(
             maxLines = 5,
             shape = RoundedCornerShape(12.dp)
         )
-        
         Text(
             text = stringResource(R.string.input_example),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 4.dp)
         )
+        Button(
+            onClick = onGenerateClick,
+            enabled = userInput.isNotBlank() && !isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text(
+                text = if (isLoading) stringResource(R.string.generate_button_loading) else stringResource(R.string.generate_button_idle),
+                fontSize = 16.sp
+            )
+        }
     }
 }
 
-@Composable
-private fun GenerateButton(
-    isLoading: Boolean,
-    isEnabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        enabled = isEnabled,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = if (isLoading) stringResource(R.string.generate_button_loading) else stringResource(R.string.generate_button_idle),
-            fontSize = 16.sp
-        )
-    }
-}
 
 @Composable
 private fun ResultDisplaySection(
     uiState: PlannerState,
+    listState: LazyListState,
+    topPadding: Dp,
     modifier: Modifier = Modifier
 ) {
-    when {
-        uiState.isLoading -> LoadingContent()
-        uiState.error != null -> ErrorContent(uiState.error)
-        uiState.result != null -> ItineraryResultContent(
-            result = uiState.result,
-            modifier = modifier
-        )
-        else -> EmptyContent()
+    Box(modifier = modifier.fillMaxSize()) {
+        when {
+            uiState.isLoading -> LoadingContent()
+            uiState.error != null -> ErrorContent(uiState.error)
+            uiState.result != null -> ItineraryResultContent(
+                result = uiState.result,
+                listState = listState,
+                topPadding = topPadding
+            )
+            else -> EmptyContent()
+        }
     }
 }
 
 @Composable
-private fun LoadingContent() {
+private fun LoadingContent(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -204,14 +240,15 @@ private fun LoadingContent() {
 }
 
 @Composable
-private fun ErrorContent(error: String) {
+private fun ErrorContent(error: String, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp)
         ) {
             Text(
                 text = stringResource(R.string.error_title),
@@ -228,16 +265,17 @@ private fun ErrorContent(error: String) {
 }
 
 @Composable
-private fun EmptyContent() {
+private fun EmptyContent(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = stringResource(R.string.empty_state_message),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
     }
 }
@@ -245,13 +283,21 @@ private fun EmptyContent() {
 @Composable
 private fun ItineraryResultContent(
     result: ItineraryResponse,
+    listState: LazyListState,
+    topPadding: Dp,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(vertical = 8.dp)
+        state = listState,
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
+        // **這個 Spacer 是關鍵，它在列表頂部創建了一個與輸入區塊等高的空間**
+        item {
+            Spacer(modifier = Modifier.height(topPadding))
+        }
+
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -259,9 +305,7 @@ private fun ItineraryResultContent(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = result.title,
                         style = MaterialTheme.typography.headlineSmall,
@@ -280,8 +324,8 @@ private fun ItineraryResultContent(
             }
         }
 
-        items(result.steps.size) { index ->
-            ItineraryStepCard(step = result.steps[index])
+        itemsIndexed(result.steps) { index, step ->
+            ItineraryStepCard(step = step, stepNumber = index + 1)
         }
     }
 }
@@ -289,52 +333,49 @@ private fun ItineraryResultContent(
 @Composable
 private fun ItineraryStepCard(
     step: ItineraryStep,
+    stepNumber: Int,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = step.activity,
+                text = "$stepNumber. ${step.activity}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Schedule,
                     contentDescription = stringResource(R.string.time_icon_description),
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = step.time,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Place,
                     contentDescription = stringResource(R.string.location_icon_description),
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = step.location,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -349,3 +390,4 @@ private fun ItineraryStepCard(
         }
     }
 }
+
