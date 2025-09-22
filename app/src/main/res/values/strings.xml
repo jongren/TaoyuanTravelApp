@@ -30,26 +30,63 @@
     <string name="address">地址</string>
     <string name="open_time">開放時間</string>
     <string name="official_website">前往官方網站</string>
-    
-    <!-- Planner Screen -->
-    <string name="planner_title">AI 行程規劃師</string>
-    <string name="back">返回</string>
-    <string name="travel_preferences_hint">請告訴我您的旅遊偏好...</string>
-    <string name="input_placeholder">例如：半日遊，喜歡看風景和喝咖啡</string>
-    <string name="ai_planning">AI 正在為您規劃行程...</string>
-    <string name="error_occurred">發生錯誤</string>
-    <string name="empty_state_message">請輸入您的偏好，AI 將為您規劃專屬行程</string>
-    <string name="time">時間</string>
-    <string name="location">地點</string>
-    <string name="generating">生成中...</string>
-    <string name="generate_itinerary">生成行程</string>
+    <string name="done">完成</string>
     
     <!-- Map Screen -->
-    <string name="map_title">景點地圖</string>
+    <string name="loading_attractions">載入景點中...</string>
+    <string name="attraction_categories">景點分類</string>
+    <string name="map_title">地圖</string>
+    <string name="back">返回</string>
     <string name="filter">篩選</string>
     <string name="my_location">我的位置</string>
-    <string name="loading_attractions">正在載入景點資料...</string>
-    <string name="attraction_categories">景點分類</string>
-    <string name="done">完成</string>
+    <string name="location">位置</string>
+    <string name="time">時間</string>
+    
+    <!-- Planner Screen -->
+    <string name="planner_title">行程規劃</string>
+    <string name="travel_preferences_hint">請輸入您的旅遊偏好</string>
+    <string name="generate_itinerary">生成行程</string>
+    <string name="generating">生成中</string>
+    <string name="ai_planning">AI 規劃中</string>
+    <string name="error_occurred">發生錯誤</string>
+    
+    <!-- AI 規劃功能相關字串 -->
+    <string name="ai_planner_title">AI 行程規劃師</string>
+    <string name="ai_planner_input_label">輸入您的旅遊偏好</string>
+    <string name="ai_planner_input_placeholder">例如：我想要一日遊，喜歡自然風景和咖啡廳</string>
+    <string name="ai_planner_generate_button">生成行程</string>
+    <string name="ai_planner_generating">生成中...</string>
+    <string name="ai_planner_empty_title">開始規劃您的桃園之旅</string>
+    <string name="ai_planner_empty_description">輸入您的旅遊偏好，讓 AI 為您量身打造完美行程</string>
+    <string name="ai_planner_error_title">生成失敗</string>
+    <string name="ai_planner_retry_button">重新生成</string>
+    <string name="input_placeholder">請輸入您的旅遊偏好...</string>
+    <string name="input_example">例如：我想要一日遊，喜歡自然風景和咖啡廳</string>
+    <string name="generate_button_idle">生成 AI 行程</string>
+    <string name="generate_button_loading">生成中...</string>
+    <string name="back_button">返回</string>
+    <string name="ai_planning_message">AI 正在為您規劃行程...</string>
+    <string name="error_title">發生錯誤</string>
+    <string name="empty_state_message">請輸入您的偏好，AI 將為您規劃專屬行程</string>
+    <string name="time_icon_description">時間</string>
+    <string name="location_icon_description">地點</string>
+    
+    <!-- 錯誤訊息 -->
+    <string name="error_no_attractions_data">無法獲取景點資料</string>
+    <string name="error_invalid_response_format">景點資料回應格式錯誤</string>
+    <string name="error_no_attractions_found">沒有找到景點資料，請稍後再試</string>
+    <string name="error_unknown">發生未知錯誤</string>
+    <string name="error_gemini_api_key_not_configured">Gemini API 金鑰未配置，請檢查 local.properties 文件</string>
+    <string name="error_gemini_api_call_failed">Gemini API 呼叫失敗</string>
+    <string name="error_empty_response">回應內容為空</string>
+    <string name="error_gemini_no_candidates">Gemini API 沒有返回任何候選結果</string>
+    <string name="error_gemini_response_format">Gemini API 回應格式錯誤</string>
+    <string name="error_ai_no_valid_json">AI 回應中沒有找到有效的 JSON 內容</string>
+    <string name="error_json_parse_null">JSON 解析結果為空</string>
+    <string name="error_json_parse_failed">無法解析 AI 回應的 JSON 格式</string>
+    
+    <!-- AI 提示詞模板 -->
+    <string name="ai_system_instruction">你是一位專業的桃園旅遊規劃師。你的任務是根據使用者提供的[旅遊偏好]和一份[景點列表]，規劃一份合理、有趣、且行程順暢的旅遊計畫。\n\n你的回覆**必須**嚴格遵循以下 JSON 格式，不得包含任何額外的解釋或 Markdown 語法：\n{\n  "title": "為您規劃的桃園一日遊",\n  "summary": "這是一條結合自然風光與咖啡小憩的輕鬆行程，適合悠閒的午後時光。",\n  "steps": [\n    {\n      "time": "13:00 - 15:00",\n      "activity": "享受湖光山色",\n      "location": "石門水庫",\n      "description": "您可以沿著壩頂步道散步，欣賞壯麗的水庫風景。"\n    },\n    {\n      "time": "15:30 - 17:00",\n      "activity": "品味老街風情與手沖咖啡",\n      "location": "大溪老街",\n      "description": "穿梭在巴洛克風格的街屋中，找一家有特色的咖啡廳稍作休息。"\n    },\n    {\n      "time": "17:00 - ",\n      "activity": "欣賞夕陽與漁港景致",\n      "location": "永安漁港",\n      "description": "在彩虹橋上等待日落，為今天的旅程畫下完美句點。"\n    }\n  ]\n}</string>
+    <string name="ai_user_content_template">[旅遊偏好]: %1$s\n\n[景點列表]: %2$s\n\n請根據以上資訊為我規劃一份桃園旅遊行程。</string>
 </resources>
 

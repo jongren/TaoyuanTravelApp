@@ -44,5 +44,11 @@
     <string name="my_location">我的位置</string>
     <string name="loading_attractions">正在載入景點資料...</string>
     <string name="attraction_categories">景點分類</string>
+    <string name="official_website">前往官方網站</string>
     <string name="done">完成</string>
+    <string name="latest_news">最新消息</string>
+    <string name="popular_attractions">熱門景點</string>
+    <string name="attraction_details">景點詳情</string>
+    <string name="address">地址</string>
+    <string name="open_time">開放時間</string>
 </resources>

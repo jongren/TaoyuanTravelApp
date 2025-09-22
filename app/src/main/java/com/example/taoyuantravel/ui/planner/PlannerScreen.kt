@@ -5,20 +5,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,11 +31,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,7 +45,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.taoyuantravel.R
-import com.example.taoyuantravel.ui.language.useLanguageEffect
+import com.example.taoyuantravel.data.model.ItineraryResponse
+import com.example.taoyuantravel.data.model.ItineraryStep
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,31 +55,34 @@ fun PlannerScreen(
     modifier: Modifier = Modifier,
     viewModel: PlannerViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.state.collectAsState()
-    
-    // 響應語系變更
-    useLanguageEffect { language ->
-        // PlannerScreen 主要處理用戶輸入和生成行程，不需要重新加載數據
-        // 但可以在這裡添加任何需要響應語系變更的邏輯
+    val uiState by viewModel.uiState.collectAsState()
+    val userInput by viewModel.userInput.collectAsState()
+    val focusManager = LocalFocusManager.current
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(uiState.result) {
+        if (uiState.result != null) {
+            focusManager.clearFocus()
+            listState.animateScrollToItem(0)
+        }
     }
+
+    // 語言效果處理已在MainActivity的LocaleWrapper中統一處理
     
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.planner_title),
-                        style = MaterialTheme.typography.headlineSmall,
+                        text = stringResource(R.string.ai_planner_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(
-                        onClick = { navController.popBackStack() }
-                    ) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
+                            contentDescription = stringResource(R.string.back_button)
                         )
                     }
                 },
@@ -88,41 +91,29 @@ fun PlannerScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-        },
-        modifier = modifier
+        }
     ) { paddingValues ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 使用者輸入區
             UserInputSection(
-                userInput = uiState.userInput,
-                onInputChange = { input ->
-                    viewModel.onEvent(PlannerEvent.UpdateUserInput(input))
-                },
-                modifier = Modifier.fillMaxWidth()
+                userInput = userInput,
+                onInputChange = viewModel::updateUserInput
             )
-            
-            // 結果顯示區
-            ResultDisplaySection(
-                uiState = uiState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
-            
-            // 生成按鈕
+
             GenerateButton(
                 isLoading = uiState.isLoading,
-                isEnabled = uiState.userInput.isNotBlank() && !uiState.isLoading,
-                onClick = {
-                    viewModel.onEvent(PlannerEvent.GenerateItinerary)
-                },
-                modifier = Modifier.fillMaxWidth()
+                isEnabled = userInput.isNotBlank() && !uiState.isLoading,
+                onClick = { viewModel.generateItinerary() }
+            )
+
+            ResultDisplaySection(
+                uiState = uiState,
+                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -138,219 +129,22 @@ private fun UserInputSection(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = stringResource(R.string.travel_preferences_hint),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Medium
-        )
-        
         OutlinedTextField(
             value = userInput,
             onValueChange = onInputChange,
-            placeholder = {
-                Text(
-                    text = stringResource(R.string.input_placeholder),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp),
-            shape = RoundedCornerShape(12.dp),
-            maxLines = 4
+            label = { Text(stringResource(R.string.input_placeholder)) },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+            maxLines = 5,
+            shape = RoundedCornerShape(12.dp)
         )
-    }
-}
-
-@Composable
-private fun ResultDisplaySection(
-    uiState: PlannerState,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            when {
-                uiState.isLoading -> {
-                    LoadingContent()
-                }
-                
-                uiState.error != null -> {
-                    ErrorContent(error = uiState.error)
-                }
-                
-                uiState.itinerary.isNotEmpty() -> {
-                    ItineraryContent(
-                        itinerary = uiState.itinerary,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                
-                else -> {
-                    EmptyContent()
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun LoadingContent() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(48.dp),
-            color = MaterialTheme.colorScheme.primary
-        )
+        
         Text(
-            text = stringResource(R.string.ai_planning),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(error: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.error_occurred),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.error,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = error,
-            style = MaterialTheme.typography.bodyMedium,
+            text = stringResource(R.string.input_example),
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            modifier = Modifier.padding(start = 4.dp)
         )
-    }
-}
-
-@Composable
-private fun EmptyContent() {
-    Text(
-        text = stringResource(R.string.empty_state_message),
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-        lineHeight = 24.sp
-    )
-}
-
-@Composable
-private fun ItineraryContent(
-    itinerary: List<ItineraryItem>,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(vertical = 8.dp)
-    ) {
-        items(itinerary) { item ->
-            ItineraryItemCard(item = item)
-        }
-    }
-}
-
-@Composable
-private fun ItineraryItemCard(
-    item: ItineraryItem,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // 時間和活動標題
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Schedule,
-                        contentDescription = stringResource(R.string.time),
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = item.time,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                Text(
-                    text = item.activity,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            
-            // 地點
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Place,
-                    contentDescription = stringResource(R.string.location),
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(18.dp)
-                )
-                Text(
-                    text = item.location,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            // 描述
-            if (item.description.isNotBlank()) {
-                Text(
-                    text = item.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 18.sp
-                )
-            }
-        }
     }
 }
 
@@ -364,31 +158,194 @@ private fun GenerateButton(
     Button(
         onClick = onClick,
         enabled = isEnabled,
-        modifier = modifier.height(56.dp),
-        shape = RoundedCornerShape(16.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
-        if (isLoading) {
+        Text(
+            text = if (isLoading) stringResource(R.string.generate_button_loading) else stringResource(R.string.generate_button_idle),
+            fontSize = 16.sp
+        )
+    }
+}
+
+@Composable
+private fun ResultDisplaySection(
+    uiState: PlannerState,
+    modifier: Modifier = Modifier
+) {
+    when {
+        uiState.isLoading -> LoadingContent()
+        uiState.error != null -> ErrorContent(uiState.error)
+        uiState.result != null -> ItineraryResultContent(
+            result = uiState.result,
+            modifier = modifier
+        )
+        else -> EmptyContent()
+    }
+}
+
+@Composable
+private fun LoadingContent() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator()
+            Text(
+                text = stringResource(R.string.ai_planning_message),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorContent(error: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.error_title),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = error,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyContent() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.empty_state_message),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun ItineraryResultContent(
+    result: ItineraryResponse,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(vertical = 8.dp)
+    ) {
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = result.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    if (result.summary.isNotBlank()) {
+                        Text(
+                            text = result.summary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        items(result.steps.size) { index ->
+            ItineraryStepCard(step = result.steps[index])
+        }
+    }
+}
+
+@Composable
+private fun ItineraryStepCard(
+    step: ItineraryStep,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = step.activity,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = stringResource(R.string.time_icon_description),
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = stringResource(R.string.generating),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium
+                    text = step.time,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        } else {
-            Text(
-                text = stringResource(R.string.generate_itinerary),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium
-            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Place,
+                    contentDescription = stringResource(R.string.location_icon_description),
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = step.location,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (step.description.isNotBlank()) {
+                Text(
+                    text = step.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 }

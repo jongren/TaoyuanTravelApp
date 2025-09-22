@@ -19,7 +19,7 @@ import javax.inject.Qualifier
 import javax.inject.Singleton
 
 /**
- * 用於區分不同的 Retrofit 實例
+ * ��춅^�ֲ�ͬ�� Retrofit ����
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
@@ -50,7 +50,6 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideGson(): Gson {
-        // 創建一個包含我們自訂 Adapter 的 Gson 實例
         return GsonBuilder()
             .registerTypeAdapterFactory(ListOrObjectAdapterFactory())
             .create()
@@ -63,7 +62,7 @@ object NetworkModule {
         return Retrofit.Builder()
             .baseUrl(ApiConstants.BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson)) // 使用自訂的 Gson
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 

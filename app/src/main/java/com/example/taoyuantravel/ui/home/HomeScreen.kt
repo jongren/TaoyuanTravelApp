@@ -32,7 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -365,6 +365,72 @@ fun ListHeader(title: String) {
 }
 
 /**
+ * 帶按鈕的列表標題組件，用於顯示區塊標題和操作按鈕
+ * 
+ * @param title 要顯示的標題文字
+ * @param buttonText 按鈕文字
+ * @param onButtonClick 按鈕點擊事件
+ */
+@Composable
+fun ListHeaderWithButton(
+    title: String,
+    buttonText: String,
+    onButtonClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(24.dp)
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(2.dp)
+                    )
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(
+                onClick = onButtonClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Psychology,
+                        contentDescription = buttonText,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = buttonText,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
  * 橫向新聞項目組件，包含圖片和文字內容
  * 
  * @param news 新聞資料
@@ -553,7 +619,7 @@ fun HomeTopAppBar(
                         ).value
                     )
                 ) {
-                    Icon(Icons.Default.Map, contentDescription = "景點地圖")
+                    Icon(Icons.Default.LocationOn, contentDescription = "景點地圖")
                 }
                 
                 // AI 行程規劃師按鈕

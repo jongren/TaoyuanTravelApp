@@ -1,11 +1,10 @@
 import java.util.Properties
+import java.io.FileInputStream
 
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
-    localPropertiesFile.inputStream().use { stream ->
-        localProperties.load(stream)
-    }
+    localProperties.load(FileInputStream(localPropertiesFile))
 }
 
 plugins {
@@ -31,9 +30,11 @@ android {
             useSupportLibrary = true
         }
         // API Key 處理
+        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: "\"\""
         val mapsApiKey = localProperties.getProperty("GOOGLE_MAPS_API_KEY") ?: "\"\""
         val geocodingApiKey = localProperties.getProperty("GOOGLE_MAPS_GEOCODING_API_KEY") ?: "\"\""
-        
+        // 將 API Key 加入 BuildConfig
+        buildConfigField("String", "GEMINI_API_KEY",geminiApiKey )
         buildConfigField("String", "GOOGLE_MAPS_API_KEY", mapsApiKey)
         buildConfigField("String", "GOOGLE_MAPS_GEOCODING_API_KEY", geocodingApiKey)
         
@@ -43,11 +44,13 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug") // 使用 debug 簽名，實際發布時應使用正式簽名
         }
     }
     compileOptions {

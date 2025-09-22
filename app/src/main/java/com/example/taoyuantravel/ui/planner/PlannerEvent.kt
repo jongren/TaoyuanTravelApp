@@ -5,23 +5,13 @@ package com.example.taoyuantravel.ui.planner
  */
 sealed interface PlannerEvent {
     /**
-     * 表示使用者輸入偏好文字的事件。
-     * @param input 使用者輸入的偏好文字
+     * 當使用者輸入文字時觸發
+     * @param text 使用者輸入的文字
      */
-    data class UpdateUserInput(val input: String) : PlannerEvent
+    data class OnUserInputChanged(val text: String) : PlannerEvent
 
     /**
-     * 表示使用者點擊生成行程按鈕的事件。
+     * 當使用者點擊按鈕時觸發
      */
     data object GenerateItinerary : PlannerEvent
-
-    /**
-     * 表示清除錯誤訊息的事件。
-     */
-    data object ClearError : PlannerEvent
-
-    /**
-     * 表示重置所有狀態的事件。
-     */
-    data object Reset : PlannerEvent
 }

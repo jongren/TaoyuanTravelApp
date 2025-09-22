@@ -205,7 +205,6 @@ fun DetailScreen(
                                             fullUrl
                                         }
 
-                        
                                         val encodedUrl = Base64.encodeToString(processedUrl.toByteArray(StandardCharsets.UTF_8), Base64.URL_SAFE)
                                         navController.navigate(Screen.WebView.createRoute(encodedUrl, attraction.name))
                                     },

@@ -30,26 +30,55 @@
     <string name="address">Address</string>
     <string name="open_time">Open Time</string>
     <string name="official_website">Official Website</string>
-    
-    <!-- Planner Screen -->
-    <string name="planner_title">AI Trip Planner</string>
-    <string name="back">Back</string>
-    <string name="travel_preferences_hint">Tell me your travel preferences...</string>
-    <string name="input_placeholder">e.g., Half-day tour, love scenery and coffee</string>
-    <string name="ai_planning">AI is planning your itinerary...</string>
-    <string name="error_occurred">An error occurred</string>
-    <string name="empty_state_message">Enter your preferences and AI will plan a personalized itinerary for you</string>
-    <string name="time">Time</string>
-    <string name="location">Location</string>
-    <string name="generating">Generating...</string>
-    <string name="generate_itinerary">Generate Itinerary</string>
+    <string name="done">Done</string>
     
     <!-- Map Screen -->
-    <string name="map_title">Attractions Map</string>
+    <string name="loading_attractions">Loading attractions...</string>
+    <string name="attraction_categories">Attraction Categories</string>
+    <string name="map_title">Map</string>
+    <string name="back">Back</string>
     <string name="filter">Filter</string>
     <string name="my_location">My Location</string>
-    <string name="loading_attractions">Loading attractions data...</string>
-    <string name="attraction_categories">Attraction Categories</string>
-    <string name="done">Done</string>
+    <string name="location">Location</string>
+    <string name="time">Time</string>
+    
+    <!-- Planner Screen -->
+    <string name="planner_title">Trip Planner</string>
+    <string name="travel_preferences_hint">Enter your travel preferences</string>
+    <string name="generate_itinerary">Generate Itinerary</string>
+    <string name="generating">Generating</string>
+    <string name="ai_planning">AI Planning</string>
+    <string name="error_occurred">Error Occurred</string>
+    
+    <!-- AI Planner Screen -->
+    <string name="ai_planner_title">AI Trip Planner</string>
+    <string name="back_button">Back</string>
+    <string name="input_placeholder">Tell me your travel preferences...</string>
+    <string name="input_example">e.g., Half-day trip, love scenery and coffee</string>
+    <string name="generate_button_idle">Generate Itinerary</string>
+    <string name="generate_button_loading">Generating...</string>
+    <string name="ai_planning_message">AI is planning your itinerary...</string>
+    <string name="error_title">Error Occurred</string>
+    <string name="empty_state_message">Enter your preferences and AI will create a personalized itinerary for you</string>
+    <string name="time_icon_description">Time</string>
+    <string name="location_icon_description">Location</string>
+    
+    <!-- Error Messages -->
+    <string name="error_no_attractions_data">Unable to fetch attraction data</string>
+    <string name="error_invalid_response_format">Invalid attraction data response format</string>
+    <string name="error_no_attractions_found">No attraction data found, please try again later</string>
+    <string name="error_unknown">Unknown error occurred</string>
+    <string name="error_gemini_api_key_not_configured">Gemini API key not configured, please check local.properties file</string>
+    <string name="error_gemini_api_call_failed">Gemini API call failed</string>
+    <string name="error_empty_response">Response content is empty</string>
+    <string name="error_gemini_no_candidates">Gemini API returned no candidate results</string>
+    <string name="error_gemini_response_format">Invalid Gemini API response format</string>
+    <string name="error_ai_no_valid_json">No valid JSON content found in AI response</string>
+    <string name="error_json_parse_null">JSON parsing result is empty</string>
+    <string name="error_json_parse_failed">Unable to parse AI response JSON format</string>
+    
+    <!-- AI Prompt Templates -->
+    <string name="ai_system_instruction">You are a professional Taoyuan travel planner. Your task is to create a reasonable, interesting, and well-organized travel plan based on the user\'s [Travel Preferences] and a [List of Attractions].\n\nYour response **must** strictly follow the JSON format below, without any additional explanations or Markdown syntax:\n{\n  "title": "Your Taoyuan Day Trip Plan",\n  "summary": "This is a relaxing itinerary combining natural scenery and coffee breaks, perfect for a leisurely afternoon.",\n  "steps": [\n    {\n      "time": "1:00 PM - 3:00 PM",\n      "activity": "Enjoy Lake and Mountain Views",\n      "location": "Shimen Reservoir",\n      "description": "You can walk along the dam walkway and admire the magnificent reservoir scenery."\n    },\n    {\n      "time": "3:30 PM - 5:00 PM",\n      "activity": "Experience Old Street Charm and Hand-drip Coffee",\n      "location": "Daxi Old Street",\n      "description": "Wander through baroque-style buildings and find a unique café to rest."\n    },\n    {\n      "time": "5:00 PM - ",\n      "activity": "Watch Sunset and Harbor Views",\n      "location": "Yong\'an Fishing Harbor",\n      "description": "Wait for sunset on the Rainbow Bridge to end your journey perfectly."\n    }\n  ]\n}</string>
+    <string name="ai_user_content_template">[Travel Preferences]: %1$s\n\n[List of Attractions]: %2$s\n\nPlease create a Taoyuan travel itinerary based on the above information.</string>
 </resources>
 
