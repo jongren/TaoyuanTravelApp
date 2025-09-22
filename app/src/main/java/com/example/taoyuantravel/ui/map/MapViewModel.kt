@@ -25,15 +25,18 @@ class MapViewModel @Inject constructor(
     val state: StateFlow<MapUiState> = _state.asStateFlow()
 
     init {
-        // 初始載入預設語系的資料
-        loadAttractions("zh-tw")
+        initializeLanguageAndLoadData()
     }
 
     /**
-     * 載入景點資料
+     * 初始化語言設定並載入資料
      */
-    private fun loadAttractions() {
-        loadAttractions("zh-tw") // 預設使用繁體中文
+    private fun initializeLanguageAndLoadData() {
+        viewModelScope.launch {
+            languageManager.getCurrentLanguage().collect { language ->
+                loadAttractions(language.code)
+            }
+        }
     }
 
     /**
@@ -42,7 +45,6 @@ class MapViewModel @Inject constructor(
     fun loadAttractions(language: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }
-            
             try {
                 val response = travelRepository.getAttractions(language, 1)
                 
@@ -165,7 +167,7 @@ class MapViewModel @Inject constructor(
      * 提取所有可用的分類
      */
     private fun extractCategories(attractions: List<Attraction>): List<String> {
-        return attractions.mapNotNull { it.category }.distinct().sorted()
+        return attractions.map { it.category }.distinct().sorted()
     }
 
     /**
